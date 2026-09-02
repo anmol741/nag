@@ -1,28 +1,59 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Course } from "@/lib/courses";
 import { courseCategories, type CourseCategorySlug } from "@/lib/site-config";
 import CourseCard from "./CourseCard";
 
+function isCourseCategorySlug(value: string | null): value is CourseCategorySlug {
+  return value !== null && courseCategories.some((c) => c.slug === value);
+}
+
 export default function CourseFilterGrid({ courses }: { courses: Course[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get("category") as CourseCategorySlug | null;
-  const [active, setActive] = useState<CourseCategorySlug | "all">(
-    initialCategory && courseCategories.some((c) => c.slug === initialCategory) ? initialCategory : "all"
-  );
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Derive the active filter straight from the URL on every render, instead
+  // of copying it into local state once — that copy went stale whenever the
+  // query string changed without remounting this component (e.g. clicking a
+  // header dropdown category while already on /courses).
+  const categoryParam = searchParams.get("category");
+  const active: CourseCategorySlug | "all" = isCourseCategorySlug(categoryParam) ? categoryParam : "all";
 
   const filtered = useMemo(
     () => (active === "all" ? courses : courses.filter((c) => c.category === active)),
     [active, courses]
   );
 
+  // Bring the filter/catalogue section into view when arriving with a
+  // category already selected (e.g. from the header dropdown).
+  useEffect(() => {
+    if (categoryParam) {
+      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [categoryParam]);
+
+  function selectCategory(next: CourseCategorySlug | "all") {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", next);
+    }
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
+
   return (
-    <div>
+    <div ref={sectionRef}>
       <div className="flex flex-wrap justify-center gap-2">
         <button
-          onClick={() => setActive("all")}
+          type="button"
+          onClick={() => selectCategory("all")}
+          aria-pressed={active === "all"}
           className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             active === "all" ? "bg-ink text-cream" : "bg-ink/5 text-ink/70 hover:bg-ink/10"
           }`}
@@ -31,8 +62,10 @@ export default function CourseFilterGrid({ courses }: { courses: Course[] }) {
         </button>
         {courseCategories.map((cat) => (
           <button
+            type="button"
             key={cat.slug}
-            onClick={() => setActive(cat.slug)}
+            onClick={() => selectCategory(cat.slug)}
+            aria-pressed={active === cat.slug}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               active === cat.slug ? "bg-ink text-cream" : "bg-ink/5 text-ink/70 hover:bg-ink/10"
             }`}
