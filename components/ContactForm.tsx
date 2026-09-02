@@ -25,8 +25,9 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-ink">Name</label>
+          <label htmlFor="contact-name" className="block text-sm font-medium text-ink">Name</label>
           <input
+            id="contact-name"
             required
             type="text"
             name="name"
@@ -34,8 +35,9 @@ export default function ContactForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-ink">Phone</label>
+          <label htmlFor="contact-phone" className="block text-sm font-medium text-ink">Phone</label>
           <input
+            id="contact-phone"
             type="tel"
             name="phone"
             className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
@@ -43,8 +45,9 @@ export default function ContactForm() {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-ink">Email</label>
+        <label htmlFor="contact-email" className="block text-sm font-medium text-ink">Email</label>
         <input
+          id="contact-email"
           required
           type="email"
           name="email"
@@ -52,8 +55,9 @@ export default function ContactForm() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-ink">Message</label>
+        <label htmlFor="contact-message" className="block text-sm font-medium text-ink">Message</label>
         <textarea
+          id="contact-message"
           required
           name="message"
           rows={5}

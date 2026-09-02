@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { business } from "@/lib/site-config";
+import { galleryImages, trainingVideo } from "@/lib/media";
+import SmartImage from "@/components/SmartImage";
 
 export const metadata: Metadata = {
   title: "About Us",
   description: `Learn about ${business.name}, a wholesale beauty supply and esthetic training center in Langley, BC.`,
 };
-
-const galleryCaptions = [
-  "Storefront entrance",
-  "Wholesale supply floor",
-  "Esthetics training room",
-  "Treatment demonstration area",
-  "Product display shelving",
-  "Hands-on training session",
-  "Retail checkout counter",
-];
 
 export default function AboutPage() {
   return (
@@ -69,17 +61,35 @@ export default function AboutPage() {
         <div className="mx-auto max-w-6xl px-6">
           <h2 className="text-center font-display text-3xl text-ink">Inside Nag&rsquo;s</h2>
           <p className="mx-auto mt-2 max-w-xl text-center text-sm text-ink/60">
-            Gallery photography from our Langley storefront and training center is coming soon.
+            A closer look at the hands-on training that happens at our Langley center.
           </p>
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {galleryCaptions.map((caption, i) => (
-              <div
-                key={caption}
-                className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border border-ink/10 bg-gradient-to-br from-ink-soft to-ink p-4 text-center"
-                style={{ opacity: 1 - i * 0.03 }}
+          <div className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3">
+            <div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-ink/10 bg-ink">
+              <video
+                controls
+                muted
+                playsInline
+                preload="metadata"
+                className="w-full"
               >
-                <span className="font-display text-xl text-gold-light/70">N</span>
-                <span className="text-xs text-white/50">{caption}</span>
+                <source src={trainingVideo.src} type="video/mp4" />
+              </video>
+            </div>
+            {galleryImages.map((img, i) => (
+              <div
+                key={img.src}
+                className="mb-4 break-inside-avoid overflow-hidden rounded-2xl border border-ink/10"
+              >
+                <SmartImage
+                  src={img.src}
+                  alt={img.alt}
+                  fit="contain"
+                  width={img.width}
+                  height={img.height}
+                  bgClassName={i % 2 === 0 ? "bg-cream" : "bg-ink"}
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  containerClassName="w-full p-3"
+                />
               </div>
             ))}
           </div>

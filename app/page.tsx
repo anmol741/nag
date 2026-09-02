@@ -2,10 +2,15 @@ import Link from "next/link";
 import { business } from "@/lib/site-config";
 import { courses, getCourseBySlug } from "@/lib/courses";
 import CourseCard from "@/components/CourseCard";
+import SmartImage from "@/components/SmartImage";
 import StatsBar from "@/components/StatsBar";
 import Testimonials from "@/components/Testimonials";
 import InstructorSection from "@/components/InstructorCard";
 import { CheckIcon } from "@/components/icons";
+
+const heroCourse = getCourseBySlug("bb-glow-certification");
+const wholesaleCourse = getCourseBySlug("beauty-business-management-course");
+const educationCourse = getCourseBySlug("brow-lamination-shaping-mapping-certification");
 
 const popularSlugs = [
   "bb-glow-certification",
@@ -26,37 +31,52 @@ export default function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-ink text-cream">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(184,150,79,0.18),_transparent_55%)]" />
-        <div className="relative mx-auto max-w-5xl px-6 py-28 text-center sm:py-36">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gold-light">
-            Langley, British Columbia
-          </p>
-          <h1 className="mt-5 font-display text-4xl leading-tight text-cream sm:text-5xl md:text-6xl">
-            Welcome to Nag&rsquo;s Beauty Supplies &amp; Training Center
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-balance text-base text-white/70 sm:text-lg">
-            {business.tagline}. A wholesale supplier and professional training center for the
-            makeup, spa, and medi-spa industry.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/shop"
-              className="rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink transition-colors hover:bg-gold-light"
-            >
-              Shop Online
-            </Link>
-            <Link
-              href="/courses"
-              className="rounded-md border border-white/25 px-6 py-3 text-sm font-semibold text-cream transition-colors hover:border-gold hover:text-gold-light"
-            >
-              View Training Courses
-            </Link>
-            <Link
-              href="/contact"
-              className="px-6 py-3 text-sm font-semibold text-white/70 transition-colors hover:text-gold-light"
-            >
-              Contact Us →
-            </Link>
+        <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-28 md:grid-cols-[56%_44%] md:items-center">
+          <div className="text-center md:text-left">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gold-light">
+              Langley, British Columbia
+            </p>
+            <h1 className="mt-5 font-display text-4xl leading-tight text-cream sm:text-5xl">
+              Welcome to Nag&rsquo;s Beauty Supplies &amp; Training Center
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-balance text-base text-white/70 sm:text-lg md:mx-0">
+              {business.tagline}. A wholesale supplier and professional training center for the
+              makeup, spa, and medi-spa industry.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-4 md:justify-start">
+              <Link
+                href="/shop"
+                className="rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink transition-colors hover:bg-gold-light"
+              >
+                Shop Online
+              </Link>
+              <Link
+                href="/courses"
+                className="rounded-md border border-white/25 px-6 py-3 text-sm font-semibold text-cream transition-colors hover:border-gold hover:text-gold-light"
+              >
+                View Training Courses
+              </Link>
+              <Link
+                href="/contact"
+                className="px-6 py-3 text-sm font-semibold text-white/70 transition-colors hover:text-gold-light"
+              >
+                Contact Us →
+              </Link>
+            </div>
           </div>
+          {heroCourse && (
+            <SmartImage
+              src={heroCourse.image}
+              alt={heroCourse.imageAlt}
+              fit="contain"
+              width={heroCourse.imageWidth}
+              height={heroCourse.imageHeight}
+              preload
+              sizes="(min-width: 768px) 44vw, 100vw"
+              bgClassName="bg-cream"
+              containerClassName="w-full rounded-2xl border-2 border-gold/40 p-4 shadow-xl"
+            />
+          )}
         </div>
       </section>
 
@@ -64,6 +84,18 @@ export default function Home() {
       <section className="bg-cream py-20">
         <div className="mx-auto grid max-w-6xl gap-12 px-6 md:grid-cols-2">
           <div>
+            {wholesaleCourse && (
+              <SmartImage
+                src={wholesaleCourse.image}
+                alt="Desk with a business-planning notebook checklist, reference books, and a phone"
+                fit="contain"
+                width={wholesaleCourse.imageWidth}
+                height={wholesaleCourse.imageHeight}
+                sizes="(min-width: 768px) 45vw, 90vw"
+                bgClassName="bg-cream"
+                containerClassName="mb-6 w-full rounded-xl border border-gold/20 p-4 shadow-md"
+              />
+            )}
             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-gold-dark">
               Wholesale Beauty Supplies
             </span>
@@ -94,6 +126,18 @@ export default function Home() {
             </Link>
           </div>
           <div>
+            {educationCourse && (
+              <SmartImage
+                src={educationCourse.image}
+                alt="Close-up of brow lamination and shaping training on a client's eyebrow"
+                fit="contain"
+                width={educationCourse.imageWidth}
+                height={educationCourse.imageHeight}
+                sizes="(min-width: 768px) 45vw, 90vw"
+                bgClassName="bg-cream"
+                containerClassName="mb-6 w-full rounded-xl border border-gold/20 p-4 shadow-md"
+              />
+            )}
             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-gold-dark">
               Education Courses
             </span>

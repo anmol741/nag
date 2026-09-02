@@ -26,8 +26,9 @@ export default function SignupForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-ink">Full Name</label>
+          <label htmlFor="signup-name" className="block text-sm font-medium text-ink">Full Name</label>
           <input
+            id="signup-name"
             required
             type="text"
             name="name"
@@ -35,8 +36,9 @@ export default function SignupForm() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-ink">Phone</label>
+          <label htmlFor="signup-phone" className="block text-sm font-medium text-ink">Phone</label>
           <input
+            id="signup-phone"
             type="tel"
             name="phone"
             className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
@@ -44,8 +46,9 @@ export default function SignupForm() {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-ink">Email</label>
+        <label htmlFor="signup-email" className="block text-sm font-medium text-ink">Email</label>
         <input
+          id="signup-email"
           required
           type="email"
           name="email"
@@ -53,8 +56,9 @@ export default function SignupForm() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-ink">I&rsquo;m Interested In</label>
+        <label htmlFor="signup-interest" className="block text-sm font-medium text-ink">I&rsquo;m Interested In</label>
         <select
+          id="signup-interest"
           name="interest"
           className="mt-1 w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-gold"
         >
@@ -67,8 +71,9 @@ export default function SignupForm() {
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-ink">Notes (optional)</label>
+        <label htmlFor="signup-notes" className="block text-sm font-medium text-ink">Notes (optional)</label>
         <textarea
+          id="signup-notes"
           name="notes"
           rows={4}
           className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"

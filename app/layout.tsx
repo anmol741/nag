@@ -16,6 +16,7 @@ const displayFont = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: `${business.shortName} | ${business.tagline}`,
     template: `%s | ${business.shortName}`,

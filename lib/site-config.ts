@@ -48,4 +48,5 @@ export const mainNav = [
       { label: "Sign Up", href: "/signup" },
     ],
   },
+  { label: "Enroll Now", href: "/enroll" },
 ] as const;

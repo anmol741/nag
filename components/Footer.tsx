@@ -75,7 +75,6 @@ export default function Footer() {
           <p>
             &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
           </p>
-          <p>Visa &middot; Mastercard &middot; Interac &middot; PayPal</p>
         </div>
       </div>
     </footer>

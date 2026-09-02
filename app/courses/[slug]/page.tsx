@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { courses, getCourseBySlug, getCoursesByCategory } from "@/lib/courses";
 import { categoryLabel } from "@/lib/site-config";
 import CourseCard from "@/components/CourseCard";
+import SmartImage from "@/components/SmartImage";
 import { CheckIcon } from "@/components/icons";
 
 export function generateStaticParams() {
@@ -18,9 +19,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const course = getCourseBySlug(slug);
   if (!course) return {};
+
+  const title = course.title;
+  const description = course.overview[0];
+
   return {
-    title: course.title,
-    description: course.overview[0],
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: course.image, alt: course.imageAlt }],
+    },
   };
 }
 
@@ -47,44 +57,59 @@ export default async function CoursePage({
   return (
     <>
       <section className="bg-ink py-16 text-cream">
-        <div className="mx-auto max-w-4xl px-6">
-          <Link href="/courses" className="text-sm text-gold-light hover:underline">
-            ← All Training Courses
-          </Link>
-          <span className="mt-4 block w-fit rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-light">
-            {categoryLabel(course.category)}
-          </span>
-          <h1 className="mt-4 font-display text-3xl sm:text-4xl">{course.title}</h1>
+        <div className="mx-auto grid max-w-5xl gap-10 px-6 md:grid-cols-5 md:items-center">
+          <div className="md:col-span-3">
+            <Link href="/courses" className="text-sm text-gold-light hover:underline">
+              ← All Training Courses
+            </Link>
+            <span className="mt-4 block w-fit rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-light">
+              {categoryLabel(course.category)}
+            </span>
+            <h1 className="mt-4 font-display text-3xl sm:text-4xl">{course.title}</h1>
 
-          {(course.prerequisite || course.notForBeginners) && (
-            <p className="mt-4 rounded-md border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold-light">
-              {course.prerequisite ?? course.notForBeginners}
-            </p>
-          )}
+            {(course.prerequisite || course.notForBeginners) && (
+              <p className="mt-4 rounded-md border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold-light">
+                {course.prerequisite ?? course.notForBeginners}
+              </p>
+            )}
 
-          <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
-            {facts.map((f) => (
-              <div key={f.label}>
-                <p className="text-xs uppercase tracking-wider text-white/50">{f.label}</p>
-                <p className="font-medium text-cream">{f.value}</p>
-              </div>
-            ))}
+            <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+              {facts.map((f) => (
+                <div key={f.label}>
+                  <p className="text-xs uppercase tracking-wider text-white/50">{f.label}</p>
+                  <p className="font-medium text-cream">{f.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                href={`/enroll?course=${course.slug}`}
+                className="rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light"
+              >
+                Enroll Now
+              </Link>
+              <Link
+                href="/contact"
+                className="rounded-md border border-white/25 px-6 py-3 text-sm font-semibold hover:border-gold hover:text-gold-light"
+              >
+                Ask a Question
+              </Link>
+            </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/contact"
-              className="rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light"
-            >
-              Enroll / Ask a Question
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-md border border-white/25 px-6 py-3 text-sm font-semibold hover:border-gold hover:text-gold-light"
-            >
-              Sign Up for Updates
-            </Link>
-          </div>
+          <SmartImage
+            src={course.image}
+            alt={course.imageAlt}
+            fit={course.imageFit}
+            position={course.imagePosition}
+            width={course.imageWidth}
+            height={course.imageHeight}
+            sizes="(min-width: 768px) 40vw, 100vw"
+            preload
+            bgClassName="bg-cream"
+            containerClassName="w-full rounded-xl border border-gold/20 p-4 shadow-md md:col-span-2"
+          />
         </div>
       </section>
 
@@ -158,7 +183,7 @@ export default async function CoursePage({
               </p>
             </div>
             <Link
-              href="/contact"
+              href={`/enroll?course=${course.slug}`}
               className="mt-6 block rounded-md bg-gold px-4 py-3 text-center text-sm font-semibold text-ink hover:bg-gold-light"
             >
               Enroll Now

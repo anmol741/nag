@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { business } from "@/lib/site-config";
+import { shopCategoryImages } from "@/lib/media";
+import ProductCategory from "@/components/ProductCategory";
 
 export const metadata: Metadata = {
   title: "Shop Online",
@@ -40,15 +42,14 @@ export default function ShopPage() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {supplyCategories.map((cat) => (
-              <div
+              <ProductCategory
                 key={cat}
-                className="flex flex-col items-start gap-3 rounded-xl border border-ink/10 p-6 transition-shadow hover:shadow-md"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/10 font-display text-gold-dark">
-                  N
-                </span>
-                <h3 className="font-display text-base text-ink">{cat}</h3>
-              </div>
+                category={{
+                  slug: cat.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                  name: cat,
+                  image: shopCategoryImages[cat],
+                }}
+              />
             ))}
           </div>
 
