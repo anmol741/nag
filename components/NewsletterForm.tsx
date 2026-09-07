@@ -22,7 +22,7 @@ export default function NewsletterForm() {
 
     setStatus("loading");
     try {
-      await submitNetlifyForm("footer-newsletter", { email });
+      await submitNetlifyForm("footer-newsletter", { "bot-field": botField, email });
       setStatus("success");
     } catch {
       setStatus("error");
@@ -38,13 +38,11 @@ export default function NewsletterForm() {
   }
 
   return (
-    <form
-      name="footer-newsletter"
-      data-netlify="true"
-      data-netlify-honeypot="bot-field"
-      onSubmit={handleSubmit}
-      className="w-full max-w-sm"
-    >
+    // Netlify form *detection* now comes entirely from the static replica
+    // in public/__forms.html (per https://opennext.js.org/netlify/forms) —
+    // this real form only needs the hidden form-name field below, which is
+    // what actually gets POSTed by handleSubmit.
+    <form onSubmit={handleSubmit} className="w-full max-w-sm">
       <input type="hidden" name="form-name" value="footer-newsletter" />
 
       <div aria-hidden="true" className="absolute left-[-9999px] top-auto h-0 w-0 overflow-hidden">

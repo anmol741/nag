@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Netlify Forms Detection</title>
+  </head>
+  <body>
+    <!--
+      Static-detection file for Netlify Forms, per the official Next.js/
+      OpenNext guidance: https://opennext.js.org/netlify/forms
+
+      Modern Next.js doesn't emit one static HTML file per route, so
+      Netlify's deploy-time form crawler can't see forms rendered only by
+      React components (especially ones on dynamically-rendered routes,
+      e.g. /enroll). This file exists purely so that crawler can detect
+      each form below as static HTML. It is never served to visitors as a
+      real page — the live, interactive forms are the React components
+      noted above each one, and they submit here in the background via
+      fetch(). Keep every field name in sync with the corresponding
+      component's submit handler.
+    -->
+
+    <!-- components/ContactForm.tsx, rendered on /contact -->
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="contact" />
+      <input name="bot-field" type="text" />
+      <input name="name" type="text" />
+      <input name="phone" type="text" />
+      <input name="email" type="email" />
+      <textarea name="message"></textarea>
+    </form>
+
+    <!-- components/EnrollForm.tsx, rendered on /enroll -->
+    <form name="enrollment" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="enrollment" />
+      <input name="bot-field" type="text" />
+      <input name="firstName" type="text" />
+      <input name="lastName" type="text" />
+      <input name="email" type="email" />
+      <input name="phone" type="text" />
+      <input name="courseSlug" type="text" />
+      <input name="courseName" type="text" />
+      <input name="coursePrice" type="text" />
+      <textarea name="message"></textarea>
+      <input name="consent" type="text" />
+    </form>
+
+    <!-- components/SignupForm.tsx, rendered on /newsletter -->
+    <form name="newsletter-course-updates" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="newsletter-course-updates" />
+      <input name="bot-field" type="text" />
+      <input name="name" type="text" />
+      <input name="phone" type="text" />
+      <input name="email" type="email" />
+      <input name="interest" type="text" />
+      <textarea name="notes"></textarea>
+    </form>
+
+    <!-- components/NewsletterForm.tsx, rendered in the footer on every page -->
+    <form name="footer-newsletter" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="footer-newsletter" />
+      <input name="bot-field" type="text" />
+      <input name="email" type="email" />
+    </form>
+  </body>
+</html>

@@ -31,6 +31,7 @@ export default function SignupForm() {
     setStatus("loading");
     try {
       await submitNetlifyForm("newsletter-course-updates", {
+        "bot-field": values.botField,
         name: values.name,
         phone: values.phone,
         email: values.email,
@@ -77,13 +78,11 @@ export default function SignupForm() {
   }
 
   return (
-    <form
-      name="newsletter-course-updates"
-      data-netlify="true"
-      data-netlify-honeypot="bot-field"
-      onSubmit={handleSubmit}
-      className="space-y-4"
-    >
+    // Netlify form *detection* now comes entirely from the static replica
+    // in public/__forms.html (per https://opennext.js.org/netlify/forms) —
+    // this real form only needs the hidden form-name field below, which is
+    // what actually gets POSTed by handleSubmit.
+    <form onSubmit={handleSubmit} className="space-y-4">
       <input type="hidden" name="form-name" value="newsletter-course-updates" />
 
       <div aria-hidden="true" className="absolute left-[-9999px] top-auto h-0 w-0 overflow-hidden">

@@ -26,6 +26,7 @@ export default function ContactForm() {
     setStatus("loading");
     try {
       await submitNetlifyForm("contact", {
+        "bot-field": values.botField,
         name: values.name,
         phone: values.phone,
         email: values.email,
@@ -71,13 +72,11 @@ export default function ContactForm() {
   }
 
   return (
-    <form
-      name="contact"
-      data-netlify="true"
-      data-netlify-honeypot="bot-field"
-      onSubmit={handleSubmit}
-      className="space-y-4"
-    >
+    // Netlify form *detection* now comes entirely from the static replica
+    // in public/__forms.html (per https://opennext.js.org/netlify/forms) —
+    // this real form only needs the hidden form-name field below, which is
+    // what actually gets POSTed by handleSubmit.
+    <form onSubmit={handleSubmit} className="space-y-4">
       <input type="hidden" name="form-name" value="contact" />
 
       {/* Honeypot: hidden from sighted and screen-reader users, but visible to most bots. */}
