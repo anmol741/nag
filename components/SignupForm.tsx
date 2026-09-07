@@ -2,16 +2,70 @@
 
 import { useState } from "react";
 import { courses } from "@/lib/courses";
+import { submitNetlifyForm } from "@/lib/netlify-forms";
+
+type SubmitStatus = "idle" | "loading" | "success" | "error";
 
 export default function SignupForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<SubmitStatus>("idle");
+  const [values, setValues] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    interest: "newsletter",
+    notes: "",
+    botField: "",
+  });
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+
+    // Prevent duplicate submissions from a double-click or a repeat Enter press.
+    if (status === "loading" || status === "success") return;
+
+    if (values.botField) {
+      setStatus("success");
+      return;
+    }
+
+    setStatus("loading");
+    try {
+      await submitNetlifyForm("newsletter-course-updates", {
+        name: values.name,
+        phone: values.phone,
+        email: values.email,
+        interest: values.interest,
+        notes: values.notes,
+      });
+      setStatus("success");
+    } catch {
+      setStatus("error");
+    }
   }
 
-  if (submitted) {
+  if (status === "error") {
+    return (
+      <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-6 text-ink">
+        <p className="font-semibold">Something went wrong</p>
+        <p className="mt-1 text-sm text-ink/70">
+          We couldn&rsquo;t submit that. Please try again, or call us at{" "}
+          <a href="tel:+17782787727" className="font-semibold text-gold-dark hover:underline">
+            (778) 278-7727
+          </a>
+          .
+        </p>
+        <button
+          type="button"
+          onClick={() => setStatus("idle")}
+          className="mt-4 rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "success") {
     return (
       <div role="status" className="rounded-lg border border-gold/30 bg-gold/10 p-6 text-ink">
         <p className="font-semibold">You&rsquo;re on the list!</p>
@@ -23,7 +77,28 @@ export default function SignupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      name="newsletter-course-updates"
+      data-netlify="true"
+      data-netlify-honeypot="bot-field"
+      onSubmit={handleSubmit}
+      className="space-y-4"
+    >
+      <input type="hidden" name="form-name" value="newsletter-course-updates" />
+
+      <div aria-hidden="true" className="absolute left-[-9999px] top-auto h-0 w-0 overflow-hidden">
+        <label htmlFor="newsletter-bot-field">Leave this field empty</label>
+        <input
+          id="newsletter-bot-field"
+          name="bot-field"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={values.botField}
+          onChange={(e) => setValues((v) => ({ ...v, botField: e.target.value }))}
+        />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="signup-name" className="block text-sm font-medium text-ink">Full Name</label>
@@ -32,7 +107,10 @@ export default function SignupForm() {
             required
             type="text"
             name="name"
-            className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
+            autoComplete="name"
+            value={values.name}
+            onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
+            className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/40"
           />
         </div>
         <div>
@@ -41,7 +119,10 @@ export default function SignupForm() {
             id="signup-phone"
             type="tel"
             name="phone"
-            className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
+            autoComplete="tel"
+            value={values.phone}
+            onChange={(e) => setValues((v) => ({ ...v, phone: e.target.value }))}
+            className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/40"
           />
         </div>
       </div>
@@ -52,7 +133,10 @@ export default function SignupForm() {
           required
           type="email"
           name="email"
-          className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
+          autoComplete="email"
+          value={values.email}
+          onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
+          className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/40"
         />
       </div>
       <div>
@@ -60,7 +144,9 @@ export default function SignupForm() {
         <select
           id="signup-interest"
           name="interest"
-          className="mt-1 w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-gold"
+          value={values.interest}
+          onChange={(e) => setValues((v) => ({ ...v, interest: e.target.value }))}
+          className="mt-1 w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/40"
         >
           <option value="newsletter">General Newsletter</option>
           {courses.map((c) => (
@@ -76,14 +162,17 @@ export default function SignupForm() {
           id="signup-notes"
           name="notes"
           rows={4}
-          className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
+          value={values.notes}
+          onChange={(e) => setValues((v) => ({ ...v, notes: e.target.value }))}
+          className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold/40"
         />
       </div>
       <button
         type="submit"
-        className="w-full rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light sm:w-auto"
+        disabled={status === "loading"}
+        className="w-full rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
-        Subscribe
+        {status === "loading" ? "Submitting…" : "Subscribe"}
       </button>
     </form>
   );

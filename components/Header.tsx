@@ -106,12 +106,16 @@ export default function Header() {
       </div>
 
       {/* Main nav */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        <Link href="/" className="shrink-0" onClick={() => setMobileOpen(false)}>
-          <span className="font-display text-2xl tracking-wide text-cream">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:px-6">
+        <Link href="/" className="min-w-0 shrink" onClick={() => setMobileOpen(false)}>
+          {/* Tracking/size step down at the smallest widths — at
+              tracking-[0.3em] the subtitle alone is ~230px wide, wider than
+              a 320px viewport's available content width once header
+              padding and the cart/menu icons are accounted for. */}
+          <span className="font-display text-lg tracking-wide text-cream sm:text-2xl">
             Nag&rsquo;s <span className="text-gold-light">Beauty</span>
           </span>
-          <span className="block text-[0.65rem] uppercase tracking-[0.3em] text-white/50">
+          <span className="block truncate text-[0.5rem] uppercase tracking-[0.08em] text-white/50 sm:text-[0.65rem] sm:tracking-[0.3em]">
             Supplies &amp; Training Center
           </span>
         </Link>
@@ -225,7 +229,7 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-3 sm:gap-4">
           <Link href="/account" aria-label="Account" className="hidden md:block hover:text-gold-light">
             <UserIcon className="h-5 w-5" />
           </Link>
@@ -236,7 +240,7 @@ export default function Header() {
             type="button"
             aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
             onClick={() => setCartOpen(true)}
-            className="relative hover:text-gold-light"
+            className="relative shrink-0 hover:text-gold-light"
           >
             <BagIcon className="h-5 w-5" />
             {cartCount > 0 && (
@@ -249,7 +253,7 @@ export default function Header() {
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav"
-            className="md:hidden"
+            className="shrink-0 md:hidden"
             onClick={() => setMobileOpen((v) => !v)}
           >
             {mobileOpen ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
@@ -259,7 +263,7 @@ export default function Header() {
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <div id="mobile-nav" className="border-t border-white/10 bg-ink px-6 py-4 md:hidden">
+        <div id="mobile-nav" className="border-t border-white/10 bg-ink px-4 py-4 sm:px-6 md:hidden">
           <nav className="flex flex-col gap-1">
             <Link
               href="/"

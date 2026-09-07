@@ -3,17 +3,28 @@
 import { useCart } from "@/lib/cart";
 import CartItem from "@/components/CartItem";
 import CartSummary from "@/components/CartSummary";
-import ComingSoonPanel from "@/components/ComingSoonPanel";
+import EmptyState from "@/components/EmptyState";
+import { BagIcon } from "@/components/icons";
 
 export default function CartPageClient() {
   const { lines, subtotal, gst, pst, total } = useCart();
 
   if (lines.length === 0) {
     return (
-      <ComingSoonPanel
-        title="Your Cart"
-        description="Online checkout is on its way. To order wholesale supplies right now, give us a call or visit the Langley storefront."
-      />
+      <section className="bg-white py-24">
+        <div className="px-6">
+          <EmptyState
+            headingLevel="h1"
+            icon={BagIcon}
+            title="Your Cart Is Empty"
+            description="Online checkout is on its way. To order wholesale supplies right now, give us a call or visit the Langley storefront."
+            actions={[
+              { label: "Shop Online", href: "/shop" },
+              { label: "Contact Us", href: "/contact", variant: "secondary" },
+            ]}
+          />
+        </div>
+      </section>
     );
   }
 

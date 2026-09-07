@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import NetlifyFormsRegistry from "@/components/NetlifyFormsRegistry";
 import { business } from "@/lib/site-config";
 import "./globals.css";
 
@@ -34,6 +36,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <WhatsAppButton />
+        <NetlifyFormsRegistry />
       </body>
     </html>
   );

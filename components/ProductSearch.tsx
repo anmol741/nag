@@ -25,7 +25,7 @@ export default function ProductSearch({
       : "border-ink/15 bg-white text-ink placeholder:text-ink/40";
 
   return (
-    <form onSubmit={handleSubmit} role="search" className="flex w-full gap-2">
+    <form onSubmit={handleSubmit} role="search" className="flex w-full flex-col gap-2 sm:flex-row">
       <label htmlFor="product-search" className="sr-only">
         Search products
       </label>
@@ -36,11 +36,11 @@ export default function ProductSearch({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search products…"
-        className={`w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-gold ${inputClass}`}
+        className={`w-full min-w-0 rounded-md border px-3 py-2 text-sm outline-none focus:border-gold ${inputClass}`}
       />
       <button
         type="submit"
-        className="shrink-0 rounded-md bg-gold px-4 py-2 text-sm font-semibold text-ink hover:bg-gold-light"
+        className="w-full shrink-0 rounded-md bg-gold px-4 py-2 text-sm font-semibold text-ink hover:bg-gold-light sm:w-auto"
       >
         Search
       </button>

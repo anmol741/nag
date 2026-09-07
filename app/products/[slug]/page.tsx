@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, products } from "@/lib/product";
+import { getProductBySlug, getRelatedProducts, productCategories, products } from "@/lib/product";
 import ProductDetail from "@/components/ProductDetail";
 import ProductGrid from "@/components/ProductGrid";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 // No wholesale products are connected yet (see lib/woocommerce.ts), so this
 // always resolves to notFound() for now — the full detail structure below
@@ -38,12 +39,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const prev = index > 0 ? products[index - 1] : undefined;
   const next = index >= 0 && index < products.length - 1 ? products[index + 1] : undefined;
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/products/${product.slug}`;
+  const category = productCategories.find((c) => c.name === product.category);
 
   return (
     <>
       <section className="bg-white py-16">
         <div className="mx-auto max-w-5xl px-6">
-          <ProductDetail product={product} />
+          <Breadcrumbs
+            items={[
+              { label: "Home", href: "/" },
+              { label: "Shop", href: "/shop" },
+              ...(category ? [{ label: category.name, href: `/shop/category/${category.slug}` }] : []),
+              { label: product.name },
+            ]}
+          />
+          <div className="mt-6">
+            <ProductDetail product={product} />
+          </div>
 
           <div className="mt-6 flex items-center gap-3 text-xs text-ink/50">
             <span>Share:</span>
@@ -65,7 +77,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </a>
           </div>
 
-          <div className="mt-10 flex justify-between border-t border-ink/10 pt-6 text-sm">
+          <div className="mt-10 flex flex-wrap justify-between gap-x-4 gap-y-2 border-t border-ink/10 pt-6 text-sm">
             {prev ? (
               <Link href={`/products/${prev.slug}`} className="text-gold-dark hover:underline">
                 ← {prev.name}
@@ -82,9 +94,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="mt-12 border-t border-ink/10 pt-10">
             <h2 className="font-display text-2xl text-ink">Reviews</h2>
-            <p className="mt-3 rounded-md border border-dashed border-ink/15 bg-cream p-6 text-sm text-ink/60">
-              No reviews yet. Reviews will appear here once online ordering is connected.
-            </p>
+            {product.reviews && product.reviews.count > 0 ? (
+              <p className="mt-3 text-sm text-ink/70">
+                {product.reviews.averageRating.toFixed(1)} out of 5 ({product.reviews.count} review
+                {product.reviews.count === 1 ? "" : "s"})
+              </p>
+            ) : (
+              <p className="mt-3 rounded-md border border-dashed border-ink/15 bg-cream p-6 text-sm text-ink/60">
+                No reviews yet. Reviews will appear here once online ordering is connected.
+              </p>
+            )}
           </div>
         </div>
       </section>

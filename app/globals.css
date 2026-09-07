@@ -25,6 +25,20 @@
   --font-display: var(--font-display);
 }
 
+/* Tailwind's preflight already sets this on every element, but it's made
+   explicit here per the mobile-overflow audit so it isn't accidentally
+   relied on implicitly. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  max-width: 100%;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -32,4 +46,13 @@ body {
 
 .text-balance {
   text-wrap: balance;
+}
+
+/* Last-resort safety net only — every real overflow source found during the
+   320px audit was fixed at its source (Header logo tracking, NewsletterForm
+   and ProductSearch's non-shrinking input rows). This just guards against a
+   future regression slipping through unnoticed, per the task's own
+   "overflow-x: clip may be used only as a final safety measure" allowance. */
+html {
+  overflow-x: clip;
 }

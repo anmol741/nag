@@ -6,7 +6,8 @@ import Image from "next/image";
 import { products, type Product } from "@/lib/product";
 import { getServerSnapshot, readArray, subscribe, writeArray } from "@/lib/local-store";
 import StockStatus from "@/components/StockStatus";
-import ComingSoonPanel from "@/components/ComingSoonPanel";
+import EmptyState from "@/components/EmptyState";
+import { CompareIcon } from "@/components/icons";
 
 const STORAGE_KEY = "nagsbeauty:compare";
 
@@ -24,10 +25,20 @@ export default function ComparePageClient() {
 
   if (products.length === 0 || compared.length === 0) {
     return (
-      <ComingSoonPanel
-        title="Compare Products"
-        description="Add products to compare once our online shop launches. For now, browse categories and contact us to place an order."
-      />
+      <section className="bg-white py-24">
+        <div className="px-6">
+          <EmptyState
+            headingLevel="h1"
+            icon={CompareIcon}
+            title="Nothing to Compare Yet"
+            description="Add products to compare once our online shop launches. For now, browse categories and contact us to place an order."
+            actions={[
+              { label: "Shop Online", href: "/shop" },
+              { label: "Contact Us", href: "/contact", variant: "secondary" },
+            ]}
+          />
+        </div>
+      </section>
     );
   }
 

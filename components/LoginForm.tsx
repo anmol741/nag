@@ -65,7 +65,7 @@ export default function LoginForm() {
           />
         </div>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <label className="flex items-center gap-2 text-sm text-ink/70">
             <input
               type="checkbox"

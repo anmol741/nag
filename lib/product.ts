@@ -5,9 +5,10 @@
 // integration is wired up; pages and components are already built to render
 // their integration-pending / empty states against this shape.
 
-import { shopCategoryImages } from "./media";
+import { shopCategoriesFallback } from "./shop-categories";
 
 export type StockStatus = "in-stock" | "out-of-stock" | "backorder";
+export type ProductType = "simple" | "variable";
 
 export interface ProductImage {
   src: string;
@@ -17,20 +18,54 @@ export interface ProductImage {
   height: number;
 }
 
+export interface ProductAttribute {
+  name: string;
+  options: string[];
+}
+
+export interface ProductVariation {
+  id: string;
+  /** e.g. { Size: "50ml", Shade: "Ivory" } — matches the parent's `attributes`. */
+  attributes: Record<string, string>;
+  price: string;
+  salePrice?: string;
+  stockStatus: StockStatus;
+  image?: ProductImage;
+}
+
+export interface ProductReviewSummary {
+  count: number;
+  /** 0–5 */
+  averageRating: number;
+}
+
 export interface Product {
   id: string;
   slug: string;
   sku: string;
   name: string;
+  type: ProductType;
+  /** Canonical WooCommerce permalink, once connected. */
+  permalink: string;
   image: ProductImage;
   gallery?: ProductImage[];
+  /** Regular (non-sale) price. */
   price: string;
   salePrice?: string;
+  /** Primary category name, used for filtering/grouping in this frontend. */
   category: string;
+  /** Full WooCommerce category list, when a product belongs to more than one. */
+  categories?: string[];
   tags?: string[];
+  attributes?: ProductAttribute[];
+  variations?: ProductVariation[];
   shortDescription: string;
   description?: string;
   stockStatus: StockStatus;
+  stockQuantity?: number;
+  reviews?: ProductReviewSummary;
+  /** WooCommerce's `related_ids`, when provided — preferred over the category-match fallback below. */
+  relatedIds?: string[];
 }
 
 export interface ProductCategoryData {
@@ -40,23 +75,21 @@ export interface ProductCategoryData {
   description?: string;
 }
 
-export const productCategories: ProductCategoryData[] = [
-  "Facials & Skin Care",
-  "Makeup Application",
-  "Eyelash Extensions & Tinting",
-  "Manicure & Pedicure",
-  "Waxing & Body Treatments",
-  "Aromatherapy",
-  "Laser & Medical Esthetics",
-  "PMU & Microblading Tools",
-].map((name) => ({
-  slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-  name,
-  image: shopCategoryImages[name],
+// Derived from the temporary WooCommerce-parent-category fallback list in
+// `lib/shop-categories.ts` — see that file for the replacement plan.
+export const productCategories: ProductCategoryData[] = shopCategoriesFallback.map((c) => ({
+  slug: c.slug,
+  name: c.name,
+  image: c.image,
 }));
 
 // No wholesale product catalogue is connected yet — see `lib/woocommerce.ts`.
 export const products: Product[] = [];
+
+/** Sale price if set, otherwise regular price — mirrors WooCommerce's `_price`. */
+export function getCurrentPrice(product: Pick<Product, "price" | "salePrice">): string {
+  return product.salePrice ?? product.price;
+}
 
 export function getProductCategoryBySlug(slug: string): ProductCategoryData | undefined {
   return productCategories.find((c) => c.slug === slug);
@@ -85,5 +118,11 @@ export function searchProducts(query: string): Product[] {
 }
 
 export function getRelatedProducts(product: Product, limit = 4): Product[] {
+  if (product.relatedIds && product.relatedIds.length > 0) {
+    const byId = product.relatedIds
+      .map((id) => products.find((p) => p.id === id))
+      .filter((p): p is Product => Boolean(p));
+    if (byId.length > 0) return byId.slice(0, limit);
+  }
   return products.filter((p) => p.category === product.category && p.slug !== product.slug).slice(0, limit);
 }

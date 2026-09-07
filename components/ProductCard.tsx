@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Product } from "@/lib/product";
 import StockStatus from "./StockStatus";
 import WishlistButton from "./WishlistButton";
+import QuickViewButton from "./QuickViewButton";
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
@@ -19,6 +20,7 @@ export default function ProductCard({ product }: { product: Product }) {
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <WishlistButton productId={product.id} className="absolute right-3 top-3 bg-white/90" />
+        <QuickViewButton product={product} />
       </div>
       <div className="flex flex-1 flex-col p-5">
         <span className="w-fit rounded-full bg-gold/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-gold-dark">

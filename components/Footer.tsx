@@ -6,8 +6,8 @@ import NewsletterForm from "./NewsletterForm";
 export default function Footer() {
   return (
     <footer className="bg-ink text-cream">
-      <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="grid gap-10 md:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+        <div className="grid gap-8 sm:gap-10 md:grid-cols-4">
           <div>
             <span className="font-display text-xl tracking-wide text-cream">
               Nag&rsquo;s <span className="text-gold-light">Beauty</span>
@@ -42,6 +42,11 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link href="/newsletter" className="hover:text-gold-light">
+                  Newsletter
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -71,10 +76,27 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
-          <p>
+        <div className="mt-12 flex flex-col items-center gap-4 border-t border-white/10 pt-6 sm:flex-row sm:justify-between">
+          <p className="text-xs text-white/40">
             &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
           </p>
+          {/* These policy pages are structural placeholders awaiting approved
+              client content (see PolicyPending) — linked here so the routes
+              are reachable, not because their text is final. */}
+          <nav aria-label="Policies" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-white/40">
+            <Link href="/privacy-policy" className="hover:text-gold-light">
+              Privacy Policy
+            </Link>
+            <Link href="/terms-and-conditions" className="hover:text-gold-light">
+              Terms and Conditions
+            </Link>
+            <Link href="/shipping-policy" className="hover:text-gold-light">
+              Shipping Policy
+            </Link>
+            <Link href="/return-refund-policy" className="hover:text-gold-light">
+              Return &amp; Refund Policy
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>

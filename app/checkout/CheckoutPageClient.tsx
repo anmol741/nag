@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import CheckoutSummary from "@/components/CheckoutSummary";
-import ComingSoonPanel from "@/components/ComingSoonPanel";
+import EmptyState from "@/components/EmptyState";
+import { ClipboardIcon } from "@/components/icons";
 
 export default function CheckoutPageClient() {
   const { lines, subtotal, gst, pst, total } = useCart();
@@ -11,10 +13,20 @@ export default function CheckoutPageClient() {
 
   if (lines.length === 0) {
     return (
-      <ComingSoonPanel
-        title="Checkout"
-        description="Your cart is empty. Add products from the shop to check out — or contact us for wholesale ordering today."
-      />
+      <section className="bg-white py-24">
+        <div className="px-6">
+          <EmptyState
+            headingLevel="h1"
+            icon={ClipboardIcon}
+            title="Nothing to Check Out Yet"
+            description="Your cart is empty. Add products from the shop to check out — or contact us for wholesale ordering today."
+            actions={[
+              { label: "Shop Online", href: "/shop" },
+              { label: "Contact Us", href: "/contact", variant: "secondary" },
+            ]}
+          />
+        </div>
+      </section>
     );
   }
 
@@ -75,6 +87,22 @@ export default function CheckoutPageClient() {
             >
               Place Order
             </button>
+
+            <p className="text-xs text-ink/50">
+              Read our{" "}
+              <Link href="/terms-and-conditions" className="underline hover:text-gold-dark">
+                Terms and Conditions
+              </Link>
+              ,{" "}
+              <Link href="/shipping-policy" className="underline hover:text-gold-dark">
+                Shipping Policy
+              </Link>
+              , and{" "}
+              <Link href="/return-refund-policy" className="underline hover:text-gold-dark">
+                Return &amp; Refund Policy
+              </Link>
+              .
+            </p>
           </div>
 
           <CheckoutSummary lines={lines} subtotal={subtotal} gst={gst} pst={pst} total={total} />

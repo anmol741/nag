@@ -3,9 +3,14 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { business } from "@/lib/site-config";
 import { getProductCategoryBySlug, getProductsByCategory, productCategories } from "@/lib/product";
-import ProductGrid from "@/components/ProductGrid";
+import ProductGridPaginated from "@/components/ProductGridPaginated";
 import ProductFilters from "@/components/ProductFilters";
 import ProductSort from "@/components/ProductSort";
+import EmptyState from "@/components/EmptyState";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { BoxIcon } from "@/components/icons";
+
+const PAGE_SIZE = 24;
 
 export function generateStaticParams() {
   return productCategories.map((c) => ({ slug: c.slug }));
@@ -43,8 +48,11 @@ export default async function ShopCategoryPage({ params }: { params: Promise<{ s
 
       <section className="bg-white py-16">
         <div className="mx-auto max-w-6xl px-6">
+          <Breadcrumbs
+            items={[{ label: "Home", href: "/" }, { label: "Shop", href: "/shop" }, { label: category.name }]}
+          />
           <Suspense fallback={null}>
-            <div className="grid gap-10 md:grid-cols-[220px_1fr]">
+            <div className="mt-6 grid gap-10 md:grid-cols-[220px_1fr]">
               <ProductFilters activeCategorySlug={slug} />
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-4">
@@ -55,15 +63,15 @@ export default async function ShopCategoryPage({ params }: { params: Promise<{ s
                 </div>
                 <div className="mt-6">
                   {products.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-ink/15 bg-cream p-10 text-center">
-                      <h2 className="font-display text-xl text-ink">Products Coming Soon</h2>
-                      <p className="mx-auto mt-2 max-w-md text-sm text-ink/60">
-                        Our {category.name.toLowerCase()} catalog is being brought online. Call{" "}
-                        {business.phone} or visit our Langley storefront to order now.
-                      </p>
+                    <div className="rounded-xl border border-dashed border-ink/15 bg-cream p-10">
+                      <EmptyState
+                        icon={BoxIcon}
+                        title="Products Coming Soon"
+                        description={`Our ${category.name.toLowerCase()} catalog is being brought online. Call ${business.phone} or visit our Langley storefront to order now.`}
+                      />
                     </div>
                   ) : (
-                    <ProductGrid products={products} />
+                    <ProductGridPaginated products={products} pageSize={PAGE_SIZE} />
                   )}
                 </div>
               </div>

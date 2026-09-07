@@ -14,14 +14,14 @@ export default function CartItem({ line }: { line: CartLine }) {
       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-ink/10 bg-cream">
         <Image src={line.image.src} alt={line.image.alt} fill sizes="80px" className="object-cover" />
       </div>
-      <div className="flex flex-1 flex-col justify-between">
-        <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 flex-1 flex-col justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
           <Link href={`/products/${line.slug}`} className="text-sm font-medium text-ink hover:text-gold-dark">
             {line.name}
           </Link>
           <p className="shrink-0 text-sm font-semibold text-ink">{currency.format(line.price * line.quantity)}</p>
         </div>
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <QuantitySelector value={line.quantity} onChange={(next) => updateQuantity(line.productId, next)} />
           <button
             type="button"
