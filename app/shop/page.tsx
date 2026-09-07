@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { business } from "@/lib/site-config";
-import { shopCategoryImages } from "@/lib/media";
+import { productCategories } from "@/lib/product";
 import ProductCategory from "@/components/ProductCategory";
+import ProductSearch from "@/components/ProductSearch";
 
 export const metadata: Metadata = {
   title: "Shop Online",
   description:
     "Wholesale beauty supplies from Nag's Beauty Supplies & Training Center — facial, waxing, lash & brow, makeup, and medical esthetics products.",
 };
-
-const supplyCategories = [
-  "Facials & Skin Care",
-  "Makeup Application",
-  "Eyelash Extensions & Tinting",
-  "Manicure & Pedicure",
-  "Waxing & Body Treatments",
-  "Aromatherapy",
-  "Laser & Medical Esthetics",
-  "PMU & Microblading Tools",
-];
 
 export default function ShopPage() {
   return (
@@ -35,21 +25,19 @@ export default function ShopPage() {
             catalog is being brought online — in the meantime, browse by category below or reach
             out for wholesale ordering.
           </p>
+          <div className="mx-auto mt-8 max-w-md">
+            <ProductSearch />
+          </div>
         </div>
       </section>
 
       <section className="bg-white py-16">
         <div className="mx-auto max-w-5xl px-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {supplyCategories.map((cat) => (
-              <ProductCategory
-                key={cat}
-                category={{
-                  slug: cat.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-                  name: cat,
-                  image: shopCategoryImages[cat],
-                }}
-              />
+            {productCategories.map((cat) => (
+              <Link key={cat.slug} href={`/shop/category/${cat.slug}`} className="block">
+                <ProductCategory category={cat} />
+              </Link>
             ))}
           </div>
 

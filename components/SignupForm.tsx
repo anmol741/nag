@@ -13,10 +13,10 @@ export default function SignupForm() {
 
   if (submitted) {
     return (
-      <div className="rounded-lg border border-gold/30 bg-gold/10 p-6 text-ink">
-        <p className="font-semibold">You&rsquo;re signed up!</p>
+      <div role="status" className="rounded-lg border border-gold/30 bg-gold/10 p-6 text-ink">
+        <p className="font-semibold">You&rsquo;re on the list!</p>
         <p className="mt-1 text-sm text-ink/70">
-          We&rsquo;ll be in touch about course availability and upcoming dates.
+          We&rsquo;ll be in touch about course availability, dates, and news from Nag&rsquo;s.
         </p>
       </div>
     );
@@ -83,7 +83,7 @@ export default function SignupForm() {
         type="submit"
         className="w-full rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light sm:w-auto"
       >
-        Sign Up
+        Subscribe
       </button>
     </form>
   );

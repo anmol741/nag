@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { business, courseCategories } from "@/lib/site-config";
+import { useCart } from "@/lib/cart";
+import MiniCart from "./MiniCart";
 import {
   BagIcon,
   ChevronDownIcon,
@@ -12,6 +14,7 @@ import {
   InstagramIcon,
   MenuIcon,
   PhoneIcon,
+  UserIcon,
 } from "./icons";
 
 function useCloseOnOutsideOrEscape(
@@ -41,6 +44,9 @@ function useCloseOnOutsideOrEscape(
 export default function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const { lines: cartLines } = useCart();
+  const cartCount = cartLines.reduce((sum, l) => sum + l.quantity, 0);
 
   const [coursesOpen, setCoursesOpen] = useState(false);
   const coursesRef = useRef<HTMLDivElement>(null);
@@ -190,7 +196,7 @@ export default function Header() {
               </button>
             </span>
             {contactOpen && (
-              <div id="contact-dropdown" className="absolute left-1/2 top-full w-44 -translate-x-1/2 pt-3">
+              <div id="contact-dropdown" className="absolute left-1/2 top-full w-64 -translate-x-1/2 pt-3">
                 <div className="rounded-lg border border-white/10 bg-ink-soft p-2 shadow-xl">
                   <Link
                     href="/contact"
@@ -200,11 +206,11 @@ export default function Header() {
                     Contact Us
                   </Link>
                   <Link
-                    href="/signup"
+                    href="/newsletter"
                     className="block rounded-md px-3 py-2 text-sm text-white/85 hover:bg-white/5 hover:text-gold-light"
                     onClick={() => setContactOpen(false)}
                   >
-                    Sign Up
+                    Newsletter &amp; Course Updates
                   </Link>
                 </div>
               </div>
@@ -220,12 +226,25 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <Link href="/account" aria-label="Account" className="hidden md:block hover:text-gold-light">
+            <UserIcon className="h-5 w-5" />
+          </Link>
           <Link href="/wishlist" aria-label="Wishlist" className="hidden md:block hover:text-gold-light">
             <HeartIcon className="h-5 w-5" />
           </Link>
-          <Link href="/cart" aria-label="Cart" className="hover:text-gold-light">
+          <button
+            type="button"
+            aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
+            onClick={() => setCartOpen(true)}
+            className="relative hover:text-gold-light"
+          >
             <BagIcon className="h-5 w-5" />
-          </Link>
+            {cartCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[0.6rem] font-bold text-ink">
+                {cartCount}
+              </span>
+            )}
+          </button>
           <button
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
@@ -289,8 +308,8 @@ export default function Header() {
             >
               Contact Us
             </Link>
-            <Link href="/signup" className="rounded-md px-2 py-2 text-sm font-medium hover:bg-white/5" onClick={() => setMobileOpen(false)}>
-              Sign Up
+            <Link href="/newsletter" className="rounded-md px-2 py-2 text-sm font-medium hover:bg-white/5" onClick={() => setMobileOpen(false)}>
+              Newsletter &amp; Course Updates
             </Link>
             <Link
               href="/enroll"
@@ -299,13 +318,23 @@ export default function Header() {
             >
               Enroll Now
             </Link>
-            <div className="mt-2 flex items-center gap-4 border-t border-white/10 pt-3">
+            <div className="mt-2 flex flex-wrap items-center gap-4 border-t border-white/10 pt-3">
+              <Link href="/account" className="text-sm hover:text-gold-light" onClick={() => setMobileOpen(false)}>
+                Account
+              </Link>
               <Link href="/wishlist" className="text-sm hover:text-gold-light" onClick={() => setMobileOpen(false)}>
                 Wishlist
               </Link>
-              <Link href="/cart" className="text-sm hover:text-gold-light" onClick={() => setMobileOpen(false)}>
-                Cart
-              </Link>
+              <button
+                type="button"
+                className="text-sm hover:text-gold-light"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setCartOpen(true);
+                }}
+              >
+                Cart{cartCount > 0 ? ` (${cartCount})` : ""}
+              </button>
               <a href={business.phoneHref} className="ml-auto flex items-center gap-1.5 text-sm text-gold-light">
                 <PhoneIcon className="h-4 w-4" />
                 {business.phone}
@@ -314,6 +343,8 @@ export default function Header() {
           </nav>
         </div>
       )}
+
+      <MiniCart open={cartOpen} onClose={() => setCartOpen(false)} />
     </header>
   );
 }

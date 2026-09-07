@@ -45,7 +45,7 @@ export const mainNav = [
     href: "/contact",
     children: [
       { label: "Contact Us", href: "/contact" },
-      { label: "Sign Up", href: "/signup" },
+      { label: "Newsletter & Course Updates", href: "/newsletter" },
     ],
   },
   { label: "Enroll Now", href: "/enroll" },

@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/lib/product";
+import StockStatus from "./StockStatus";
+import WishlistButton from "./WishlistButton";
 
 export default function ProductCard({ product }: { product: Product }) {
-  const outOfStock = product.stockStatus === "out-of-stock";
-
   return (
     <Link
-      href={`/shop/${product.slug}`}
+      href={`/products/${product.slug}`}
       className="group flex flex-col overflow-hidden rounded-xl border border-ink/10 bg-white shadow-sm transition-shadow hover:shadow-lg"
     >
       <div className="relative h-44 w-full shrink-0 overflow-hidden bg-cream">
@@ -18,11 +18,7 @@ export default function ProductCard({ product }: { product: Product }) {
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        {outOfStock && (
-          <span className="absolute left-3 top-3 rounded-full bg-ink/80 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-cream">
-            Out of Stock
-          </span>
-        )}
+        <WishlistButton productId={product.id} className="absolute right-3 top-3 bg-white/90" />
       </div>
       <div className="flex flex-1 flex-col p-5">
         <span className="w-fit rounded-full bg-gold/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-gold-dark">
@@ -41,6 +37,9 @@ export default function ProductCard({ product }: { product: Product }) {
           ) : (
             <span className="font-semibold text-ink">{product.price}</span>
           )}
+        </div>
+        <div className="mt-3">
+          <StockStatus status={product.stockStatus} />
         </div>
       </div>
     </Link>
