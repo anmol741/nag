@@ -52,10 +52,12 @@ export interface Product {
   permalink: string;
   image: ProductImage;
   gallery?: ProductImage[];
-  /** Regular (non-sale) price, formatted for display (e.g. "$12.95 CAD"). */
+  /** Regular (non-sale) price, formatted for display (e.g. "$12.95 CAD") — or "Contact for price" when WooCommerce has no valid price set. */
   price: string;
-  /** Sale price, formatted for display — set only when the product is on sale. */
+  /** Sale price, formatted for display — set only when the product is on sale and that sale price is itself valid. */
   salePrice?: string;
+  /** False when WooCommerce's price is zero, empty, or otherwise unusable. Cart/pricing UI must not treat such a product as purchasable at $0. */
+  hasValidPrice: boolean;
   /** Primary category name, used for filtering/grouping in this frontend. */
   category: string;
   /** Slug of the primary category, for linking back to its /shop/category/[slug] page. */

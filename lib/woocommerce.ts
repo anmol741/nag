@@ -210,6 +210,53 @@ function mapStockStatus(raw: Pick<WooCommerceProduct, "is_in_stock" | "is_on_bac
   return "in-stock";
 }
 
+const CONTACT_FOR_PRICE = "Contact for price";
+
+/** A zero/empty/invalid price is a WooCommerce data problem, not a real $0 price — the Store API has no separate "this product is legitimately free" flag, so any non-positive price is treated as unset. */
+function isValidPriceAmount(minorAmount: string | undefined): boolean {
+  if (!minorAmount) return false;
+  const cents = Number.parseInt(minorAmount, 10);
+  return Number.isFinite(cents) && cents > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Zero/missing-price report — an in-memory log (resets on server restart)
+// of every product WooCommerce returned with no usable price, so it can be
+// reviewed and corrected in WooCommerce Admin. Not persisted to disk/DB;
+// see getZeroPriceReport().
+// ---------------------------------------------------------------------------
+
+export interface ZeroPriceEntry {
+  id: string;
+  slug: string;
+  name: string;
+  rawPrice: string;
+  firstSeen: string;
+}
+
+const zeroPriceReport = new Map<string, ZeroPriceEntry>();
+
+function recordZeroPrice(raw: WooCommerceProduct, name: string) {
+  const id = String(raw.id);
+  if (!zeroPriceReport.has(id)) {
+    zeroPriceReport.set(id, {
+      id,
+      slug: raw.slug,
+      name,
+      rawPrice: raw.prices.regular_price,
+      firstSeen: new Date().toISOString(),
+    });
+  }
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[woocommerce] product has no valid price — id=${id} name="${name}" rawPrice="${raw.prices.regular_price}"`);
+  }
+}
+
+/** Every product encountered so far with a zero/empty/invalid price. Read-only snapshot. */
+export function getZeroPriceReport(): ZeroPriceEntry[] {
+  return [...zeroPriceReport.values()];
+}
+
 // ---------------------------------------------------------------------------
 // Mapping: raw WooCommerce shapes -> this app's Product / category view models
 // ---------------------------------------------------------------------------
@@ -232,6 +279,10 @@ export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
   const categories = raw.categories.map((c) => decodeEntities(c.name));
   const reviewCount = raw.review_count ?? 0;
 
+  const hasValidPrice = isValidPriceAmount(raw.prices.regular_price);
+  if (!hasValidPrice) recordZeroPrice(raw, name);
+  const hasValidSalePrice = raw.on_sale && isValidPriceAmount(raw.prices.price);
+
   return {
     id: String(raw.id),
     slug: raw.slug,
@@ -241,8 +292,9 @@ export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
     permalink: raw.permalink,
     image,
     gallery: gallery.length > 0 ? gallery : undefined,
-    price: formatWooPrice(raw.prices, raw.prices.regular_price),
-    salePrice: raw.on_sale ? formatWooPrice(raw.prices, raw.prices.price) : undefined,
+    price: hasValidPrice ? formatWooPrice(raw.prices, raw.prices.regular_price) : CONTACT_FOR_PRICE,
+    salePrice: hasValidSalePrice ? formatWooPrice(raw.prices, raw.prices.price) : undefined,
+    hasValidPrice,
     category: categories[0] ?? "",
     primaryCategorySlug: raw.categories[0]?.slug,
     categories: categories.length > 0 ? categories : undefined,
@@ -468,5 +520,27 @@ export async function searchProducts(query: string, params: Omit<GetProductsPara
 /** Fetches WooCommerce's related products for a given product ID. */
 export async function getRelatedProducts(productId: string, limit = 4): Promise<Product[]> {
   const { data } = await wooRequest<WooCommerceProduct[]>("/products", { related: productId, per_page: limit });
+  return data.map(mapWooProductToProduct);
+}
+
+/**
+ * Fetches specific products by WooCommerce ID, via the Store API's
+ * `include` parameter. Used to resolve locally-stored wishlist/compare IDs
+ * back to real product data. IDs that no longer exist (deleted/unpublished)
+ * are simply omitted from the result — WooCommerce doesn't error for them —
+ * so callers can diff the returned IDs against the requested ones to find
+ * stale entries worth pruning from storage.
+ */
+export async function getProductsByIds(ids: string[]): Promise<Product[]> {
+  // Capped well above any real wishlist/compare list (compare is capped at
+  // 4; wishlists are realistically dozens at most) as a defensive limit
+  // against a malformed or abusive `ids` query value.
+  const MAX_IDS = 100;
+  const cleanIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))].slice(0, MAX_IDS);
+  if (cleanIds.length === 0) return [];
+  const { data } = await wooRequest<WooCommerceProduct[]>("/products", {
+    include: cleanIds.join(","),
+    per_page: cleanIds.length,
+  });
   return data.map(mapWooProductToProduct);
 }

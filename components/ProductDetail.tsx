@@ -79,25 +79,41 @@ export default function ProductDetail({ product }: { product: Product }) {
         )}
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <QuantitySelector value={quantity} onChange={setQuantity} disabled={outOfStock} />
+          <QuantitySelector value={quantity} onChange={setQuantity} disabled={outOfStock || !product.hasValidPrice} />
           <button
             type="button"
             disabled
             aria-disabled="true"
-            title="Online cart and checkout are coming soon"
+            title={
+              product.hasValidPrice
+                ? "Online cart and checkout are coming soon"
+                : "This product's price needs to be confirmed before it can be ordered — please contact us"
+            }
             className="cursor-not-allowed rounded-md bg-ink/10 px-6 py-3 text-sm font-semibold text-ink/40"
           >
-            Add to Cart — Coming Soon
+            {product.hasValidPrice ? "Add to Cart — Coming Soon" : "Contact for Price"}
           </button>
           <WishlistButton productId={product.id} />
           <CompareButton productId={product.id} />
         </div>
         <p className="mt-2 text-xs text-ink/50">
-          Online cart and checkout integration is not live yet. To order, call{" "}
-          <a href="tel:+17782787727" className="text-gold-dark hover:underline">
-            (778) 278-7727
-          </a>{" "}
-          or visit our Langley storefront.
+          {product.hasValidPrice ? (
+            <>
+              Online cart and checkout integration is not live yet. To order, call{" "}
+              <a href="tel:+17782787727" className="text-gold-dark hover:underline">
+                (778) 278-7727
+              </a>{" "}
+              or visit our Langley storefront.
+            </>
+          ) : (
+            <>
+              This product&rsquo;s price hasn&rsquo;t been set yet. Please call{" "}
+              <a href="tel:+17782787727" className="text-gold-dark hover:underline">
+                (778) 278-7727
+              </a>{" "}
+              to confirm pricing and availability.
+            </>
+          )}
         </p>
 
         {product.tags && product.tags.length > 0 && (

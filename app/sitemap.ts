@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { courses } from "@/lib/courses";
 import { getProductCategories } from "@/lib/woocommerce";
+import { getSiteUrl } from "@/lib/site-url";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = getSiteUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [

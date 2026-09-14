@@ -1,18 +1,9 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { getServerSnapshot, readArray, subscribe, writeArray } from "@/lib/local-store";
+import { readArray, useStoredIds, writeArray } from "@/lib/local-store";
 import { HeartIcon } from "./icons";
 
-const STORAGE_KEY = "nagsbeauty:wishlist";
-
-function subscribeWishlist(callback: () => void) {
-  return subscribe(STORAGE_KEY, callback);
-}
-
-function readWishlist(): string[] {
-  return readArray<string>(STORAGE_KEY);
-}
+export const WISHLIST_STORAGE_KEY = "nagsbeauty:wishlist";
 
 /**
  * Client-side wishlist toggle backed by localStorage. There is no customer
@@ -26,17 +17,17 @@ export default function WishlistButton({
   productId: string;
   className?: string;
 }) {
-  const wishlist = useSyncExternalStore(subscribeWishlist, readWishlist, getServerSnapshot<string>);
+  const wishlist = useStoredIds(WISHLIST_STORAGE_KEY);
   const saved = wishlist.includes(productId);
 
   function toggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const current = readWishlist();
+    const current = readArray<string>(WISHLIST_STORAGE_KEY);
     const next = current.includes(productId)
       ? current.filter((id) => id !== productId)
-      : [...current, productId];
-    writeArray(STORAGE_KEY, next);
+      : [...new Set([...current, productId])];
+    writeArray(WISHLIST_STORAGE_KEY, next);
   }
 
   return (

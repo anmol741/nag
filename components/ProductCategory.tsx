@@ -18,11 +18,14 @@ export default function ProductCategory({ category }: { category: ProductCategor
       </div>
       <div className="px-6 pb-6">
         <h3 className="font-display text-base text-ink">{category.name}</h3>
-        {category.count > 0 && (
-          <p className="mt-1 text-xs text-ink/50">
-            {category.count} product{category.count === 1 ? "" : "s"}
-          </p>
-        )}
+        {/* WooCommerce's per-category `count` only reflects products
+            assigned directly to that term — it undercounts parent
+            categories whose products actually live in a child category
+            (e.g. Waxing showed "48" here but the category page, which
+            queries live, correctly returns 92 including subcategories).
+            Rather than show a misleading direct-only number, this card
+            shows no count; the real, query-derived total appears on the
+            category page itself. */}
         {category.description && <p className="mt-1 text-sm text-ink/60">{category.description}</p>}
       </div>
     </div>

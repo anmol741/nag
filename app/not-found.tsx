@@ -1,29 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { business } from "@/lib/site-config";
+import NotFoundPage from "@/components/NotFoundPage";
 
-export const metadata: Metadata = { title: "Page Not Found" };
+// The root layout's title template (`%s | Nag's Beauty Supplies`) isn't
+// reliably applied when notFound() is triggered from inside a nested
+// dynamic route (verified: the browser title fell back to the homepage
+// title for /products/[slug] and /shop/category/[slug]). Setting an
+// `absolute` title sidesteps the template entirely, so it's correct
+// regardless of which not-found boundary Next.js resolves to.
+export const metadata: Metadata = {
+  title: { absolute: `Page Not Found | ${business.shortName}` },
+};
 
 export default function NotFound() {
-  return (
-    <section className="bg-white py-24">
-      <div className="mx-auto max-w-lg px-6 text-center">
-        <p className="font-display text-6xl text-gold-dark">404</p>
-        <h1 className="mt-4 font-display text-3xl text-ink">Page Not Found</h1>
-        <p className="mt-3 text-ink/60">
-          The page you&rsquo;re looking for doesn&rsquo;t exist or may have moved.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Link href="/" className="rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light">
-            Back to Home
-          </Link>
-          <Link
-            href="/courses"
-            className="rounded-md border border-ink/15 px-6 py-3 text-sm font-semibold text-ink hover:border-gold hover:text-gold-dark"
-          >
-            Browse Courses
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
+  return <NotFoundPage />;
 }

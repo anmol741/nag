@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { business, courseCategories } from "@/lib/site-config";
 import { useCart } from "@/lib/cart";
+import { useStoredIds } from "@/lib/local-store";
+import { WISHLIST_STORAGE_KEY } from "./WishlistButton";
 import MiniCart from "./MiniCart";
 import {
   BagIcon,
@@ -47,6 +49,7 @@ export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
   const { lines: cartLines } = useCart();
   const cartCount = cartLines.reduce((sum, l) => sum + l.quantity, 0);
+  const wishlistCount = useStoredIds(WISHLIST_STORAGE_KEY).length;
 
   const [coursesOpen, setCoursesOpen] = useState(false);
   const coursesRef = useRef<HTMLDivElement>(null);
@@ -233,8 +236,17 @@ export default function Header() {
           <Link href="/account" aria-label="Account" className="hidden md:block hover:text-gold-light">
             <UserIcon className="h-5 w-5" />
           </Link>
-          <Link href="/wishlist" aria-label="Wishlist" className="hidden md:block hover:text-gold-light">
+          <Link
+            href="/wishlist"
+            aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount === 1 ? "" : "s"}` : ""}`}
+            className="relative hidden shrink-0 md:block hover:text-gold-light"
+          >
             <HeartIcon className="h-5 w-5" />
+            {wishlistCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[0.6rem] font-bold text-ink">
+                {wishlistCount}
+              </span>
+            )}
           </Link>
           <button
             type="button"
@@ -327,7 +339,7 @@ export default function Header() {
                 Account
               </Link>
               <Link href="/wishlist" className="text-sm hover:text-gold-light" onClick={() => setMobileOpen(false)}>
-                Wishlist
+                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
               </Link>
               <button
                 type="button"

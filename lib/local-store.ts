@@ -5,6 +5,8 @@
 // component state with an external browser API without triggering
 // cascading-render issues from setState-in-effect.
 
+import { useSyncExternalStore } from "react";
+
 const listeners = new Map<string, Set<() => void>>();
 const snapshotCache = new Map<string, { raw: string | null; value: unknown }>();
 const EMPTY: never[] = [];
@@ -83,6 +85,15 @@ export function writeValue<T>(key: string, value: T | null) {
   }
   snapshotCache.delete(key);
   notify(key);
+}
+
+/** Reactive list of IDs stored under `key` (e.g. the wishlist or compare localStorage key) — re-renders on same-tab writes and cross-tab storage events. */
+export function useStoredIds(key: string): string[] {
+  return useSyncExternalStore(
+    (callback) => subscribe(key, callback),
+    () => readArray<string>(key),
+    () => getServerSnapshot<string>()
+  );
 }
 
 export function subscribe(key: string, callback: () => void): () => void {

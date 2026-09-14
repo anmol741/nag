@@ -1,40 +1,53 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { getServerSnapshot, readArray, subscribe, writeArray } from "@/lib/local-store";
+import { readArray, useStoredIds, writeArray } from "@/lib/local-store";
+import { CompareIcon } from "./icons";
 
-const STORAGE_KEY = "nagsbeauty:compare";
-const MAX_COMPARE = 4;
+export const COMPARE_STORAGE_KEY = "nagsbeauty:compare";
+export const MAX_COMPARE = 4;
 
-function subscribeCompare(callback: () => void) {
-  return subscribe(STORAGE_KEY, callback);
-}
-
-function readCompare(): string[] {
-  return readArray<string>(STORAGE_KEY);
-}
-
-/** Client-side "compare" toggle backed by localStorage, capped at 4 products. */
+/** Client-side "compare" toggle backed by localStorage, capped at 4 products, deduplicated. */
 export default function CompareButton({
   productId,
   className = "",
+  variant = "label",
 }: {
   productId: string;
   className?: string;
+  /** "label" (default) is the full text button used on the product-detail page. "icon" is a compact circular toggle sized to sit on a ProductCard without crowding it. */
+  variant?: "label" | "icon";
 }) {
-  const compareList = useSyncExternalStore(subscribeCompare, readCompare, getServerSnapshot<string>);
+  const compareList = useStoredIds(COMPARE_STORAGE_KEY);
   const added = compareList.includes(productId);
   const atLimit = compareList.length >= MAX_COMPARE && !added;
 
   function toggle(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const current = readCompare();
+    const current = readArray<string>(COMPARE_STORAGE_KEY);
     if (!current.includes(productId) && current.length >= MAX_COMPARE) return;
     const next = current.includes(productId)
       ? current.filter((id) => id !== productId)
-      : [...current, productId];
-    writeArray(STORAGE_KEY, next);
+      : [...new Set([...current, productId])];
+    writeArray(COMPARE_STORAGE_KEY, next);
+  }
+
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={atLimit}
+        aria-pressed={added}
+        aria-label={added ? "Remove from comparison" : "Add to comparison"}
+        title={atLimit ? `You can compare up to ${MAX_COMPARE} products` : added ? "Remove from comparison" : "Add to comparison"}
+        className={`inline-flex items-center justify-center rounded-full border p-2 transition-colors disabled:opacity-40 ${
+          added ? "border-gold bg-gold/10" : "border-ink/15 hover:border-gold"
+        } ${className}`}
+      >
+        <CompareIcon className={`h-5 w-5 ${added ? "text-gold-dark" : "text-ink/60"}`} />
+      </button>
+    );
   }
 
   return (
