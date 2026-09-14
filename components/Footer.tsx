@@ -80,9 +80,9 @@ export default function Footer() {
           <p className="text-xs text-white/40">
             &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
           </p>
-          {/* These policy pages are structural placeholders awaiting approved
-              client content (see PolicyPending) — linked here so the routes
-              are reachable, not because their text is final. */}
+          {/* Policy pages currently show draft, client-review-pending content
+              (noindex until approved) — see the DRAFT POLICY CONTENT comment
+              in each page.tsx. */}
           <nav aria-label="Policies" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-white/40">
             <Link href="/privacy-policy" className="hover:text-gold-light">
               Privacy Policy

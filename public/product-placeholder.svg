@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title">
+  <title id="title">Product image not available</title>
+  <rect width="200" height="200" fill="#faf7f1" />
+  <g fill="none" stroke="#b8964f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Jar body -->
+    <rect x="62" y="86" width="76" height="70" rx="10" />
+    <!-- Jar lid -->
+    <rect x="70" y="66" width="60" height="20" rx="6" fill="#b8964f" fill-opacity="0.12" />
+    <rect x="76" y="52" width="48" height="16" rx="5" />
+    <!-- Label line -->
+    <line x1="78" y1="120" x2="122" y2="120" stroke-width="2.5" opacity="0.6" />
+    <line x1="84" y1="132" x2="116" y2="132" stroke-width="2.5" opacity="0.4" />
+    <!-- Sparkle accents -->
+    <path d="M148 60l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#b8964f" stroke="none" opacity="0.7" />
+    <path d="M50 132l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#b8964f" stroke="none" opacity="0.5" />
+  </g>
+</svg>

@@ -1,20 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { productCategories } from "@/lib/product";
+import type { ProductCategoryData } from "@/lib/product";
 
-const stockOptions = [
+const stockOptions: { value: "in-stock" | "backorder"; label: string }[] = [
   { value: "in-stock", label: "In Stock" },
   { value: "backorder", label: "Available on Backorder" },
 ];
 
 /**
- * Structural filter sidebar for future WooCommerce product listings
- * (category, stock status, price range). Reads/writes the URL query string
- * so filters are shareable and back/forward-navigable, matching
- * CourseFilterGrid's pattern.
+ * Category + availability sidebar for WooCommerce product listings. Reads/
+ * writes the URL query string so filters are shareable and back/forward-
+ * navigable. Categories are passed in (fetched server-side) rather than
+ * imported statically, and are rendered as a parent/child tree to preserve
+ * WooCommerce's category hierarchy.
  */
-export default function ProductFilters({ activeCategorySlug }: { activeCategorySlug?: string }) {
+export default function ProductFilters({
+  categories,
+  activeCategorySlug,
+}: {
+  categories: ProductCategoryData[];
+  activeCategorySlug?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,28 +37,52 @@ export default function ProductFilters({ activeCategorySlug }: { activeCategoryS
     } else {
       [...current, value].forEach((v) => params.append("stock", v));
     }
+    params.delete("page");
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
+
+  const topLevel = categories.filter((c) => c.parentId === null);
+  const childrenOf = (parentId: string) => categories.filter((c) => c.parentId === parentId);
 
   return (
     <div className="space-y-8">
       <div>
         <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-ink/50">Category</h3>
-        <ul className="mt-3 space-y-2 text-sm">
-          {productCategories.map((cat) => (
-            <li key={cat.slug}>
-              <a
-                href={`/shop/category/${cat.slug}`}
-                aria-current={activeCategorySlug === cat.slug ? "page" : undefined}
-                className={`hover:text-gold-dark ${
-                  activeCategorySlug === cat.slug ? "font-semibold text-gold-dark" : "text-ink/70"
-                }`}
-              >
-                {cat.name}
-              </a>
-            </li>
-          ))}
+        <ul className="mt-3 space-y-1 text-sm">
+          {topLevel.map((cat) => {
+            const children = childrenOf(cat.id);
+            return (
+              <li key={cat.slug}>
+                <Link
+                  href={`/shop/category/${cat.slug}`}
+                  aria-current={activeCategorySlug === cat.slug ? "page" : undefined}
+                  className={`block py-1 hover:text-gold-dark ${
+                    activeCategorySlug === cat.slug ? "font-semibold text-gold-dark" : "text-ink/70"
+                  }`}
+                >
+                  {cat.name}
+                </Link>
+                {children.length > 0 && (
+                  <ul className="ml-3 space-y-1 border-l border-ink/10 pl-3">
+                    {children.map((child) => (
+                      <li key={child.slug}>
+                        <Link
+                          href={`/shop/category/${child.slug}`}
+                          aria-current={activeCategorySlug === child.slug ? "page" : undefined}
+                          className={`block py-0.5 text-sm hover:text-gold-dark ${
+                            activeCategorySlug === child.slug ? "font-semibold text-gold-dark" : "text-ink/60"
+                          }`}
+                        >
+                          {child.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
 

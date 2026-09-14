@@ -1,11 +1,8 @@
-// Product types shaped to map cleanly onto a future headless WooCommerce
-// integration (WooCommerce Store API / WPGraphQL). No live data source is
-// connected yet — see the integration note in `lib/woocommerce.ts`. The
-// arrays below are intentionally empty (no fake product records) until that
-// integration is wired up; pages and components are already built to render
-// their integration-pending / empty states against this shape.
-
-import { shopCategoriesFallback } from "./shop-categories";
+// Shared product "view model" types rendered by the product UI components
+// (ProductCard, ProductGrid, ProductDetail, ProductGallery, StockStatus,
+// QuickViewButton, WishlistButton, CompareButton). Real data is fetched
+// server-side from the WooCommerce Store API and mapped onto this shape by
+// `lib/woocommerce.ts` — see that file for the live integration.
 
 export type StockStatus = "in-stock" | "out-of-stock" | "backorder";
 export type ProductType = "simple" | "variable";
@@ -13,10 +10,16 @@ export type ProductType = "simple" | "variable";
 export interface ProductImage {
   src: string;
   alt: string;
-  /** Natural pixel dimensions, used to render the image at its true aspect ratio. */
-  width: number;
-  height: number;
+  /** Natural pixel dimensions, when known — the WooCommerce Store API does not return them for product images, so these are usually omitted for product photos. */
+  width?: number;
+  height?: number;
 }
+
+/** Local, branded fallback used whenever WooCommerce returns no image for a product or category — never a letter placeholder. */
+export const PRODUCT_IMAGE_FALLBACK: ProductImage = {
+  src: "/product-placeholder.svg",
+  alt: "Product image not available",
+};
 
 export interface ProductAttribute {
   name: string;
@@ -45,84 +48,63 @@ export interface Product {
   sku: string;
   name: string;
   type: ProductType;
-  /** Canonical WooCommerce permalink, once connected. */
+  /** Canonical WooCommerce permalink. */
   permalink: string;
   image: ProductImage;
   gallery?: ProductImage[];
-  /** Regular (non-sale) price. */
+  /** Regular (non-sale) price, formatted for display (e.g. "$12.95 CAD"). */
   price: string;
+  /** Sale price, formatted for display — set only when the product is on sale. */
   salePrice?: string;
   /** Primary category name, used for filtering/grouping in this frontend. */
   category: string;
+  /** Slug of the primary category, for linking back to its /shop/category/[slug] page. */
+  primaryCategorySlug?: string;
   /** Full WooCommerce category list, when a product belongs to more than one. */
   categories?: string[];
   tags?: string[];
   attributes?: ProductAttribute[];
+  /** Only populated for variable products — this catalogue currently has none. */
   variations?: ProductVariation[];
+  /** True for variable products that require an option selection before purchase. */
+  hasOptions?: boolean;
+  isPurchasable?: boolean;
+  /** Plain-text short description — safe for card blurbs and <meta description>. */
   shortDescription: string;
+  /** Sanitized HTML short description, safe to render with dangerouslySetInnerHTML. */
+  shortDescriptionHtml?: string;
+  /** Plain-text full description. */
   description?: string;
+  /** Sanitized HTML full description, safe to render with dangerouslySetInnerHTML. */
+  descriptionHtml?: string;
   stockStatus: StockStatus;
   stockQuantity?: number;
+  /** WooCommerce's human-readable stock line, e.g. "Only 3 left in stock". */
+  stockMessage?: string;
   reviews?: ProductReviewSummary;
-  /** WooCommerce's `related_ids`, when provided — preferred over the category-match fallback below. */
+  /** WooCommerce related product IDs, when provided. */
   relatedIds?: string[];
 }
 
 export interface ProductCategoryData {
+  id: string;
   slug: string;
   name: string;
+  /** Parent category ID, or null for a top-level category. */
+  parentId: string | null;
+  /** Published product count in this category (as reported by WooCommerce). */
+  count: number;
   image?: ProductImage;
   description?: string;
 }
 
-// Derived from the temporary WooCommerce-parent-category fallback list in
-// `lib/shop-categories.ts` — see that file for the replacement plan.
-export const productCategories: ProductCategoryData[] = shopCategoriesFallback.map((c) => ({
-  slug: c.slug,
-  name: c.name,
-  image: c.image,
-}));
-
-// No wholesale product catalogue is connected yet — see `lib/woocommerce.ts`.
+// No wholesale product catalogue is bundled statically — live data comes
+// from `lib/woocommerce.ts`. This stays empty; it exists only so the
+// wishlist/compare pages (which resolve locally-stored product IDs back to
+// full product records) and other pre-existing call sites keep compiling.
 export const products: Product[] = [];
 
 /** Sale price if set, otherwise regular price — mirrors WooCommerce's `_price`. */
 export function getCurrentPrice(product: Pick<Product, "price" | "salePrice">): string {
   return product.salePrice ?? product.price;
-}
-
-export function getProductCategoryBySlug(slug: string): ProductCategoryData | undefined {
-  return productCategories.find((c) => c.slug === slug);
-}
-
-export function getProducts(): Product[] {
-  return products;
-}
-
-export function getProductBySlug(slug: string): Product | undefined {
-  return products.find((p) => p.slug === slug);
-}
-
-export function getProductsByCategory(categorySlug: string): Product[] {
-  const category = getProductCategoryBySlug(categorySlug);
-  if (!category) return [];
-  return products.filter((p) => p.category === category.name);
-}
-
-export function searchProducts(query: string): Product[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  return products.filter(
-    (p) => p.name.toLowerCase().includes(q) || p.shortDescription.toLowerCase().includes(q)
-  );
-}
-
-export function getRelatedProducts(product: Product, limit = 4): Product[] {
-  if (product.relatedIds && product.relatedIds.length > 0) {
-    const byId = product.relatedIds
-      .map((id) => products.find((p) => p.id === id))
-      .filter((p): p is Product => Boolean(p));
-    if (byId.length > 0) return byId.slice(0, limit);
-  }
-  return products.filter((p) => p.category === product.category && p.slug !== product.slug).slice(0, limit);
 }

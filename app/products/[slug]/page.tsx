@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductBySlug, getRelatedProducts, productCategories, products } from "@/lib/product";
+import { getProductBySlug, getRelatedProducts } from "@/lib/woocommerce";
 import ProductDetail from "@/components/ProductDetail";
 import ProductGrid from "@/components/ProductGrid";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
-// No wholesale products are connected yet (see lib/woocommerce.ts), so this
-// always resolves to notFound() for now — the full detail structure below
-// (gallery, stock, wishlist/compare, related products) is ready to render
-// the moment `lib/product.ts` starts returning real WooCommerce data.
+// Products are fetched live (and cached for 5 minutes — see lib/woocommerce.ts)
+// rather than pre-generated at build time, since this catalogue holds
+// hundreds of products and changes independently of this app's deploys.
+export const dynamicParams = true;
 export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
+  return [];
 }
 
 export async function generateMetadata({
@@ -20,26 +19,26 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return {};
   return {
     title: product.name,
-    description: product.shortDescription,
-    openGraph: { title: product.name, description: product.shortDescription, images: [{ url: product.image.src }] },
+    description: product.shortDescription || product.name,
+    openGraph: {
+      title: product.name,
+      description: product.shortDescription || product.name,
+      images: [{ url: product.image.src }],
+    },
   };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const related = getRelatedProducts(product);
-  const index = products.findIndex((p) => p.slug === slug);
-  const prev = index > 0 ? products[index - 1] : undefined;
-  const next = index >= 0 && index < products.length - 1 ? products[index + 1] : undefined;
+  const related = await getRelatedProducts(product.id, 4);
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/products/${product.slug}`;
-  const category = productCategories.find((c) => c.name === product.category);
 
   return (
     <>
@@ -49,7 +48,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             items={[
               { label: "Home", href: "/" },
               { label: "Shop", href: "/shop" },
-              ...(category ? [{ label: category.name, href: `/shop/category/${category.slug}` }] : []),
+              ...(product.category && product.primaryCategorySlug
+                ? [{ label: product.category, href: `/shop/category/${product.primaryCategorySlug}` }]
+                : []),
               { label: product.name },
             ]}
           />
@@ -77,21 +78,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </a>
           </div>
 
-          <div className="mt-10 flex flex-wrap justify-between gap-x-4 gap-y-2 border-t border-ink/10 pt-6 text-sm">
-            {prev ? (
-              <Link href={`/products/${prev.slug}`} className="text-gold-dark hover:underline">
-                ← {prev.name}
-              </Link>
-            ) : (
-              <span />
-            )}
-            {next && (
-              <Link href={`/products/${next.slug}`} className="text-gold-dark hover:underline">
-                {next.name} →
-              </Link>
-            )}
-          </div>
-
           <div className="mt-12 border-t border-ink/10 pt-10">
             <h2 className="font-display text-2xl text-ink">Reviews</h2>
             {product.reviews && product.reviews.count > 0 ? (
@@ -101,7 +87,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </p>
             ) : (
               <p className="mt-3 rounded-md border border-dashed border-ink/15 bg-cream p-6 text-sm text-ink/60">
-                No reviews yet. Reviews will appear here once online ordering is connected.
+                No reviews yet.
               </p>
             )}
           </div>

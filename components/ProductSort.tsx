@@ -2,13 +2,17 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const sortOptions = [
+export const sortOptions = [
   { value: "featured", label: "Featured" },
+  { value: "newest", label: "Newest" },
   { value: "price-asc", label: "Price: Low to High" },
   { value: "price-desc", label: "Price: High to Low" },
+  { value: "rating", label: "Top Rated" },
+  { value: "popularity", label: "Most Popular" },
   { value: "name-asc", label: "Name: A to Z" },
-  { value: "newest", label: "Newest" },
 ] as const;
+
+export type SortValue = (typeof sortOptions)[number]["value"];
 
 export default function ProductSort() {
   const router = useRouter();
@@ -23,6 +27,7 @@ export default function ProductSort() {
     } else {
       params.set("sort", value);
     }
+    params.delete("page");
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }

@@ -12,7 +12,7 @@ export default function ProductGallery({ main, gallery = [] }: { main: ProductIm
   return (
     <div>
       <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-ink/10 bg-cream">
-        <Image src={active.src} alt={active.alt} fill sizes="(min-width: 768px) 40vw, 100vw" className="object-cover" />
+        <Image src={active.src} alt={active.alt} fill sizes="(min-width: 768px) 40vw, 100vw" className="object-contain p-6" />
       </div>
       {images.length > 1 && (
         <div className="mt-3 grid grid-cols-5 gap-2">
@@ -27,7 +27,7 @@ export default function ProductGallery({ main, gallery = [] }: { main: ProductIm
                 i === activeIndex ? "border-gold" : "border-ink/10"
               }`}
             >
-              <Image src={img.src} alt="" fill sizes="10vw" className="object-cover" />
+              <Image src={img.src} alt="" fill sizes="10vw" className="object-contain p-1.5" />
             </button>
           ))}
         </div>

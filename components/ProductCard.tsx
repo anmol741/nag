@@ -17,20 +17,24 @@ export default function ProductCard({ product }: { product: Product }) {
           alt={product.image.alt}
           fill
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
         />
         <WishlistButton productId={product.id} className="absolute right-3 top-3 bg-white/90" />
         <QuickViewButton product={product} />
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <span className="w-fit rounded-full bg-gold/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-gold-dark">
-          {product.category}
-        </span>
+        {product.category && (
+          <span className="w-fit rounded-full bg-gold/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-gold-dark">
+            {product.category}
+          </span>
+        )}
         <h3 className="mt-3 font-display text-base leading-snug text-ink group-hover:text-gold-dark">
           {product.name}
         </h3>
-        <p className="mt-1 line-clamp-2 text-sm text-ink/60">{product.shortDescription}</p>
-        <div className="mt-3 flex items-center gap-2">
+        {product.shortDescription && (
+          <p className="mt-1 line-clamp-2 text-sm text-ink/60">{product.shortDescription}</p>
+        )}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           {product.salePrice ? (
             <>
               <span className="font-semibold text-ink">{product.salePrice}</span>

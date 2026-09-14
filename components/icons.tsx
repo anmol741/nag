@@ -136,6 +136,20 @@ export function ClipboardIcon({ className }: IconProps) {
   );
 }
 
+export function AlertIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 3.5L21.5 20h-19L12 3.5z"
+      />
+      <path strokeLinecap="round" d="M12 10v4" />
+      <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function WhatsAppIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { business } from "@/lib/site-config";
-import { searchProducts } from "@/lib/product";
+import { searchProducts, resolveSort } from "@/lib/woocommerce";
 import ProductSearch from "@/components/ProductSearch";
-import ProductGridPaginated from "@/components/ProductGridPaginated";
+import ProductGrid from "@/components/ProductGrid";
+import ProductSort from "@/components/ProductSort";
+import Pagination from "@/components/Pagination";
 import EmptyState from "@/components/EmptyState";
 import { SearchIcon } from "@/components/icons";
 
@@ -14,10 +16,16 @@ export const metadata: Metadata = { title: "Search Products" };
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; sort?: string }>;
 }) {
-  const { q = "" } = await searchParams;
-  const results = q ? searchProducts(q) : [];
+  const sp = await searchParams;
+  const q = sp.q ?? "";
+  const page = Math.max(1, Number(sp.page) || 1);
+  const { orderby, order } = resolveSort(sp.sort);
+
+  const { products, total, totalPages } = q
+    ? await searchProducts(q, { page, perPage: PAGE_SIZE, orderby, order })
+    : { products: [], total: 0, totalPages: 1 };
 
   return (
     <section className="bg-white py-16">
@@ -32,13 +40,17 @@ export default async function SearchPage({
       <div className="mx-auto mt-12 max-w-6xl px-6">
         <Suspense fallback={null}>
           {q ? (
-            results.length > 0 ? (
+            products.length > 0 ? (
               <>
-                <p className="text-sm text-ink/50">
-                  {results.length} result{results.length === 1 ? "" : "s"} for &ldquo;{q}&rdquo;
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <p className="text-sm text-ink/50">
+                    {total} result{total === 1 ? "" : "s"} for &ldquo;{q}&rdquo;
+                  </p>
+                  <ProductSort />
+                </div>
                 <div className="mt-6">
-                  <ProductGridPaginated products={results} pageSize={PAGE_SIZE} />
+                  <ProductGrid products={products} />
+                  <Pagination totalPages={totalPages} />
                 </div>
               </>
             ) : (
@@ -46,7 +58,7 @@ export default async function SearchPage({
                 <EmptyState
                   icon={SearchIcon}
                   title={`No results for "${q}"`}
-                  description={`Our online catalog is still being brought online, so search results are limited right now. Call ${business.phone} or contact us for wholesale ordering.`}
+                  description={`Try a different search term, or call ${business.phone} for help finding a product.`}
                   actions={[{ label: "Contact Us", href: "/contact", variant: "secondary" }]}
                 />
               </div>

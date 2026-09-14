@@ -52,12 +52,14 @@ export default function QuickViewButton({ product }: { product: Product }) {
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="relative aspect-square w-full overflow-hidden rounded-md bg-cream">
-                <Image src={product.image.src} alt={product.image.alt} fill sizes="(min-width: 640px) 40vw, 90vw" className="object-cover" />
+                <Image src={product.image.src} alt={product.image.alt} fill sizes="(min-width: 640px) 40vw, 90vw" className="object-contain p-5" />
               </div>
               <div>
-                <span className="w-fit rounded-full bg-gold/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-gold-dark">
-                  {product.category}
-                </span>
+                {product.category && (
+                  <span className="w-fit rounded-full bg-gold/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-gold-dark">
+                    {product.category}
+                  </span>
+                )}
                 <h2 className="mt-3 font-display text-2xl text-ink">{product.name}</h2>
                 <p className="mt-2 font-semibold text-ink">{getCurrentPrice(product)}</p>
                 <div className="mt-2">
