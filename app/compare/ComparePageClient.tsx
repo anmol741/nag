@@ -171,8 +171,15 @@ export default function ComparePageClient() {
             <tbody>
               <tr>
                 {products.map((p) => (
-                  <td key={p.id} className="w-56 border-b border-ink/10 p-4 align-top">
-                    <div className="relative aspect-square w-full overflow-hidden rounded-md bg-cream">
+                  <td key={p.id} className="w-56 max-w-56 border-b border-ink/10 p-4 align-top">
+                    {/* max-w-56 on both the cell and the image box: a <table> with
+                        default auto layout ignores a <td>'s w-56 once it's the only
+                        (or a nearly-only) column and stretches to fill the row —
+                        which, combined with aspect-square, blew the product photo
+                        up to nearly the full page width when only 1-2 items were
+                        left in the comparison. The explicit max-width caps it
+                        regardless of how many columns the table currently has. */}
+                    <div className="relative aspect-square w-full max-w-56 overflow-hidden rounded-md bg-cream">
                       <Image src={p.image.src} alt={p.image.alt} fill sizes="200px" className="object-contain p-3" />
                     </div>
                     <Link href={`/products/${p.slug}`} className="mt-3 block text-sm font-medium text-ink hover:text-gold-dark">

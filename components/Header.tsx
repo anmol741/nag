@@ -123,8 +123,12 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-7 md:flex">
+        {/* Desktop nav — starts at lg (1024px), not md (768px): at 768px
+            this nav's five items (four links plus Enroll Now) don't fit on
+            one line each, and every single one wraps to two lines (e.g.
+            "About" / "Us"), confirmed via measurement. The mobile nav below
+            already renders cleanly at 768px, so it now covers 768–1023px too. */}
+        <nav className="hidden items-center gap-7 lg:flex">
           <Link href="/about" className={navLinkClass("/about")}>
             About Us
           </Link>
@@ -233,13 +237,13 @@ export default function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-          <Link href="/account" aria-label="Account" className="hidden md:block hover:text-gold-light">
+          <Link href="/account" aria-label="Account" className="hidden lg:block hover:text-gold-light">
             <UserIcon className="h-5 w-5" />
           </Link>
           <Link
             href="/wishlist"
             aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount === 1 ? "" : "s"}` : ""}`}
-            className="relative hidden shrink-0 md:block hover:text-gold-light"
+            className="relative hidden shrink-0 lg:block hover:text-gold-light"
           >
             <HeartIcon className="h-5 w-5" />
             {wishlistCount > 0 && (
@@ -265,7 +269,7 @@ export default function Header() {
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav"
-            className="shrink-0 md:hidden"
+            className="shrink-0 lg:hidden"
             onClick={() => setMobileOpen((v) => !v)}
           >
             {mobileOpen ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
@@ -275,7 +279,7 @@ export default function Header() {
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <div id="mobile-nav" className="border-t border-white/10 bg-ink px-4 py-4 sm:px-6 md:hidden">
+        <div id="mobile-nav" className="border-t border-white/10 bg-ink px-4 py-4 sm:px-6 lg:hidden">
           <nav className="flex flex-col gap-1">
             <Link
               href="/"

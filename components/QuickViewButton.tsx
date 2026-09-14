@@ -32,12 +32,18 @@ export default function QuickViewButton({ product }: { product: Product }) {
           role="dialog"
           aria-modal="true"
           aria-label={`Quick view: ${product.name}`}
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+          // items-start + overflow-y-auto (rather than items-center on a
+          // non-scrolling container) so that on a short viewport the modal
+          // scrolls into view instead of being centered off both the top
+          // and bottom simultaneously — confirmed via testing that the
+          // close button and "View Full Details" link were both completely
+          // unreachable at 320x480 with the previous centered/fixed layout.
+          className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto p-4 py-8"
         >
           <button
             type="button"
             aria-label="Close quick view"
-            className="absolute inset-0 bg-black/50"
+            className="fixed inset-0 bg-black/50"
             onClick={() => setOpen(false)}
           />
           <div className="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl">
