@@ -96,7 +96,11 @@ const sections: PolicySection[] = [
         Training courses, workshops, and classes are subject to availability, applicable
         prerequisites, payment requirements, and the terms communicated at registration. Course
         deposits are non-refundable, except where otherwise required by applicable law. Students
-        must comply with our Training Course Registration, Cancellation &amp; Refund Policy.
+        must comply with our{" "}
+        <Link href="/training-course-policy" className="text-gold-dark hover:underline">
+          Training Course Registration, Cancellation &amp; Refund Policy
+        </Link>
+        .
       </p>
     ),
   },

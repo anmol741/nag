@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PolicyLayout, { type PolicySection } from "@/components/PolicyLayout";
 
 export const metadata: Metadata = {
@@ -88,8 +89,11 @@ const sections: PolicySection[] = [
     body: (
       <p>
         This Return &amp; Refund Policy applies to products and does not govern course deposits,
-        training fees, cancellations, rescheduling, or no-shows. Please refer to our Training
-        Course Registration, Cancellation &amp; Refund Policy.
+        training fees, cancellations, rescheduling, or no-shows. Please refer to our{" "}
+        <Link href="/training-course-policy" className="text-gold-dark hover:underline">
+          Training Course Registration, Cancellation &amp; Refund Policy
+        </Link>
+        .
       </p>
     ),
   },

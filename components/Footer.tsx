@@ -89,6 +89,9 @@ export default function Footer() {
             <Link href="/return-refund-policy" className="hover:text-gold-light">
               Return &amp; Refund Policy
             </Link>
+            <Link href="/training-course-policy" className="hover:text-gold-light">
+              Training Course Policy
+            </Link>
           </nav>
         </div>
       </div>

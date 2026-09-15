@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Course } from "@/lib/courses";
 import { submitNetlifyForm } from "@/lib/netlify-forms";
@@ -349,6 +350,13 @@ export default function EnrollForm({
         {status === "loading" ? "Submitting…" : "Submit Enrollment Request"}
       </button>
       <p className="text-xs text-ink/40">No payment is collected here. Course payment is handled separately.</p>
+      <p className="text-xs text-ink/40">
+        Course deposits, rescheduling, and no-show terms are described in our{" "}
+        <Link href="/training-course-policy" className="text-gold-dark hover:underline">
+          Training Course Registration, Cancellation &amp; Refund Policy
+        </Link>
+        .
+      </p>
     </form>
   );
 }
