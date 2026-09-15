@@ -1,24 +1,25 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { business } from "@/lib/site-config";
+import { policyContact } from "@/lib/site-config";
 
 export type PolicySection = {
-  heading: string;
+  heading: ReactNode;
   body: ReactNode;
 };
 
 /**
- * Shared layout for the four policy pages. Renders the draft-review notice
- * and "last updated" line above the content, and a contact block below it,
- * so every policy page stays visually and structurally consistent.
+ * Shared layout for the four policy pages. Content on each page comes
+ * verbatim from the client's signed policy PDF
+ * (docs/Nags-Beauty-Website-Policies.pdf) — this component only supplies
+ * the shared chrome (heading, effective date, contact block) around it.
  */
 export default function PolicyLayout({
   title,
-  lastUpdated,
+  effectiveDate,
   sections,
 }: {
   title: string;
-  lastUpdated: string;
+  effectiveDate: string;
   sections: PolicySection[];
 }) {
   return (
@@ -26,38 +27,37 @@ export default function PolicyLayout({
       <section className="bg-ink py-16 text-cream">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h1 className="font-display text-4xl sm:text-5xl">{title}</h1>
-          <p className="mt-3 text-sm text-white/60">{lastUpdated}</p>
+          <p className="mt-3 text-sm text-white/60">Effective Date: {effectiveDate}</p>
         </div>
       </section>
 
-      <section className="bg-white py-10">
+      <section className="bg-white py-16">
         <div className="mx-auto max-w-3xl px-6">
-          <div className="rounded-xl border border-dashed border-gold-dark/40 bg-cream p-5">
-            <p className="text-sm font-semibold text-ink">Draft for client review</p>
-            <p className="mt-1 text-sm text-ink/70">
-              This sample policy has not yet received final legal or client approval and may
-              change before the website launches.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white pb-16">
-        <div className="mx-auto max-w-3xl px-6">
-          {sections.map((section) => (
-            <div key={section.heading} className="mt-10 first:mt-0">
+          {sections.map((section, index) => (
+            <div key={index} className="mt-10 first:mt-0">
               <h2 className="font-display text-2xl text-ink">{section.heading}</h2>
               <div className="mt-3 space-y-3 leading-relaxed text-ink/70">{section.body}</div>
             </div>
           ))}
 
           <div className="mt-12 border-t border-ink/10 pt-8">
-            <h2 className="font-display text-2xl text-ink">Contact Information</h2>
+            <h2 className="font-display text-2xl text-ink">Contact</h2>
             <div className="mt-3 space-y-1 text-ink/70">
-              <p>{business.name}</p>
-              <p>{business.address.full}</p>
-              <p>{business.phone}</p>
-              <p>Email: [CLIENT TO CONFIRM]</p>
+              <p>{policyContact.businessName}</p>
+              <p>{policyContact.address}</p>
+              <p>
+                Email:{" "}
+                <a href={policyContact.emailHref} className="text-gold-dark hover:underline">
+                  {policyContact.email}
+                </a>
+              </p>
+              <p>
+                Phone:{" "}
+                <a href={policyContact.phoneHref} className="text-gold-dark hover:underline">
+                  {policyContact.phone}
+                </a>
+              </p>
+              <p>{policyContact.website}</p>
             </div>
             <p className="mt-6 text-sm text-ink/60">
               Questions in the meantime?{" "}

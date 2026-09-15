@@ -8,16 +8,8 @@ import { useCart } from "@/lib/cart";
 import { useStoredIds } from "@/lib/local-store";
 import { WISHLIST_STORAGE_KEY } from "./WishlistButton";
 import MiniCart from "./MiniCart";
-import {
-  BagIcon,
-  ChevronDownIcon,
-  CloseIcon,
-  HeartIcon,
-  InstagramIcon,
-  MenuIcon,
-  PhoneIcon,
-  UserIcon,
-} from "./icons";
+import SocialLinks from "./SocialLinks";
+import { BagIcon, ChevronDownIcon, CloseIcon, HeartIcon, MenuIcon, PhoneIcon, UserIcon } from "./icons";
 
 function useCloseOnOutsideOrEscape(
   active: boolean,
@@ -92,15 +84,7 @@ export default function Header() {
               <PhoneIcon className="h-3.5 w-3.5" />
               {business.phone}
             </a>
-            <a
-              href={business.instagram.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 hover:text-gold-light"
-            >
-              <InstagramIcon className="h-3.5 w-3.5" />
-              {business.instagram.handle}
-            </a>
+            <SocialLinks iconClassName="h-3.5 w-3.5" showHandle={false} />
           </div>
           <div className="flex items-center gap-4">
             <span>{business.hours}</span>

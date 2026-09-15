@@ -1,156 +1,144 @@
 import type { Metadata } from "next";
 import PolicyLayout, { type PolicySection } from "@/components/PolicyLayout";
-import { business } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   robots: { index: false, follow: false },
 };
 
-const LAST_UPDATED = "Last updated: September 2026 — Draft";
+const EFFECTIVE_DATE = "September 2026";
 
-// DRAFT POLICY CONTENT — MUST BE REPLACED OR APPROVED BY THE CLIENT BEFORE PRODUCTION LAUNCH.
+// Content sourced verbatim from docs/Nags-Beauty-Website-Policies.pdf ("Privacy Policy" section).
 const sections: PolicySection[] = [
   {
-    heading: "Information Customers Provide",
+    heading: "Introduction",
     body: (
       <p>
-        When you interact with {business.name} — whether by placing a wholesale order, enrolling
-        in a training course, signing up for our newsletter, or contacting us directly — we may
-        collect information you choose to provide, such as your name, phone number, mailing or
-        shipping address, and any details you include in a form or message to us.
+        Nag&rsquo;s Beauty Supplies &amp; Training Centre (&ldquo;Nag&rsquo;s Beauty,&rdquo;
+        &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) respects your privacy and is
+        committed to protecting the personal information entrusted to us. This Privacy Policy
+        explains how we collect, use, disclose, store, and protect personal information when you
+        visit our website, purchase products, register for training, contact us, or otherwise
+        interact with our business.
       </p>
     ),
   },
   {
-    heading: "Account and Order Information",
+    heading: "1. Information We Collect",
+    body: (
+      <>
+        <p>Depending on how you interact with us, we may collect information such as:</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Name</li>
+          <li>Email address</li>
+          <li>Telephone number</li>
+          <li>Billing and shipping address</li>
+          <li>Order and purchase information</li>
+          <li>Training and course registration information</li>
+          <li>Customer service communications</li>
+          <li>Information voluntarily provided through forms or inquiries</li>
+        </ul>
+        <p>
+          When you make an online payment, your payment information may be processed by
+          third-party payment service providers. We do not intend to retain complete credit or
+          debit card details on our own systems where payment is processed by such providers.
+        </p>
+        <p>
+          Our website may also automatically collect certain technical information, such as IP
+          address, browser type, device information, pages visited, and website activity through
+          cookies and similar technologies.
+        </p>
+      </>
+    ),
+  },
+  {
+    heading: "2. How We Use Personal Information",
+    body: (
+      <>
+        <p>We may use personal information to:</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Process and fulfill purchases</li>
+          <li>Process payments and refunds</li>
+          <li>Arrange shipping and delivery</li>
+          <li>Manage course and training registrations</li>
+          <li>Communicate regarding orders, courses, appointments, or inquiries</li>
+          <li>Provide customer service</li>
+          <li>Maintain appropriate business and transaction records</li>
+          <li>Prevent fraud or unauthorized transactions</li>
+          <li>Improve our website, products, services, and training programs</li>
+          <li>Send promotional communications where permitted by law</li>
+          <li>Meet applicable legal and regulatory obligations</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    heading: "3. Sharing Personal Information",
     body: (
       <p>
-        If you create an account or place an order through our online shop, we collect
-        information needed to process that order and manage your account, including your contact
-        details, billing and shipping addresses, and a record of the products or courses you have
-        purchased or enrolled in.
+        Nag&rsquo;s Beauty does not sell or rent customers&rsquo; personal information. We may
+        disclose information to trusted service providers where reasonably necessary to operate
+        our business, including payment processors, website/e-commerce providers, shipping
+        companies, IT providers, and other service providers. We may also disclose personal
+        information when required or permitted by applicable law.
       </p>
     ),
   },
   {
-    heading: "Contact, Newsletter and Enrollment Forms",
+    heading: "4. Cookies and Website Technologies",
     body: (
       <p>
-        Our contact form, newsletter sign-up, and course enrollment forms collect the information
-        you enter into those forms — such as your name, phone number, and the details of your
-        inquiry, subscription, or enrollment request — so that we can respond to you or process
-        your request.
+        Our website may use cookies and similar technologies to operate website features,
+        remember preferences, understand website activity, and improve the customer experience.
+        You may be able to control or disable cookies through your browser settings. Certain
+        website functions may not work properly if cookies are disabled.
       </p>
     ),
   },
   {
-    heading: "Cookies and Analytics",
+    heading: "5. Marketing Communications",
     body: (
       <p>
-        Our website may use cookies and similar technologies to keep the site working properly,
-        remember your preferences, and understand how visitors use our website through analytics
-        tools. You can usually adjust your browser settings to refuse or delete cookies, though
-        some parts of the site may not function as intended if you do.
+        Where permitted by applicable law, we may communicate with customers about new products,
+        promotions, training programs, events, or other offers. Recipients may unsubscribe from
+        promotional emails using the unsubscribe option provided in the communication or by
+        contacting us.
       </p>
     ),
   },
   {
-    heading: "How Information Is Used",
+    heading: "6. Protection and Retention of Information",
     body: (
       <p>
-        We use the information we collect to process and fulfill wholesale orders, manage course
-        enrollments, respond to inquiries, send newsletter and course-update communications to
-        subscribers, operate and improve our website, and meet our legal and accounting
-        obligations.
+        We use reasonable administrative, technical, and physical safeguards appropriate to the
+        nature of the information to protect personal information from unauthorized access, loss,
+        misuse, disclosure, alteration, or destruction. No method of electronic transmission or
+        storage can be guaranteed to be completely secure. Personal information is retained only
+        for as long as reasonably necessary for the purposes for which it was collected and to
+        satisfy applicable legal, accounting, business, and regulatory requirements.
       </p>
     ),
   },
   {
-    heading: "WooCommerce and Service Providers",
+    heading: "7. Access and Correction",
     body: (
       <p>
-        Our online shop is powered by WooCommerce and related third-party services that help us
-        operate our website, process orders, and manage customer communications. These service
-        providers may process customer information on our behalf, solely for the purpose of
-        providing those services to us.
+        Subject to applicable law, individuals may contact us to request access to personal
+        information we hold about them or to request correction of inaccurate information.
       </p>
     ),
   },
   {
-    heading: "Payment Information",
+    heading: "8. Changes to This Privacy Policy",
     body: (
       <p>
-        Payments made through our website are processed by a third-party payment provider.
-        [CLIENT TO CONFIRM]. We do not store full payment card details on our own servers; payment
-        information is handled directly by our payment processor in accordance with its own
-        privacy and security practices.
-      </p>
-    ),
-  },
-  {
-    heading: "Information Sharing",
-    body: (
-      <p>
-        We do not sell customer information. We may share information with trusted service
-        providers who help us operate our website, process payments, fulfill orders, or deliver
-        course-related communications, and we may disclose information where required to comply
-        with the law or to protect our rights, customers, or business.
-      </p>
-    ),
-  },
-  {
-    heading: "Data Retention",
-    body: (
-      <p>
-        We retain customer and order information for as long as necessary to fulfill the purposes
-        described in this policy, including maintaining order and enrollment records, and to meet
-        our legal, accounting, and reporting obligations.
-      </p>
-    ),
-  },
-  {
-    heading: "Customer Privacy Rights",
-    body: (
-      <p>
-        You may request access to, correction of, or deletion of the personal information we hold
-        about you, subject to applicable law and our legitimate business and record-keeping needs.
-        To make a request, please use the contact details below.
-      </p>
-    ),
-  },
-  {
-    heading: "Data Security",
-    body: (
-      <p>
-        We take reasonable measures intended to protect customer information from unauthorized
-        access, use, or disclosure. However, no method of transmission or storage over the
-        internet is completely secure, and we cannot guarantee absolute security.
-      </p>
-    ),
-  },
-  {
-    heading: "Children's Privacy",
-    body: (
-      <p>
-        Our website and services are intended for adults and professional or aspiring
-        estheticians. We do not knowingly collect personal information from children, and our
-        courses and wholesale products are not directed at children.
-      </p>
-    ),
-  },
-  {
-    heading: "Policy Changes",
-    body: (
-      <p>
-        We may update this privacy policy from time to time. Any changes will be posted on this
-        page with an updated &ldquo;last updated&rdquo; date. We encourage customers to review this
-        page periodically.
+        We may update this Privacy Policy periodically. Any revised version will be posted on our
+        website with an updated effective date.
       </p>
     ),
   },
 ];
 
 export default function PrivacyPolicyPage() {
-  return <PolicyLayout title="Privacy Policy" lastUpdated={LAST_UPDATED} sections={sections} />;
+  return <PolicyLayout title="Privacy Policy" effectiveDate={EFFECTIVE_DATE} sections={sections} />;
 }

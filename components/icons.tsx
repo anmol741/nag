@@ -22,6 +22,19 @@ export function InstagramIcon({ className }: IconProps) {
   );
 }
 
+export function FacebookIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4.5" />
+      <path
+        d="M14 8.75h-1.25c-.83 0-1.25.42-1.25 1.25V12h2.3l-.3 2.25h-2v5.25h-2.3v-5.25H7.5V12h1.7v-1.75c0-1.8 1.06-2.9 2.85-2.9H14v2.4z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </svg>
+  );
+}
+
 export function MenuIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
@@ -146,6 +159,47 @@ export function AlertIcon({ className }: IconProps) {
       />
       <path strokeLinecap="round" d="M12 10v4" />
       <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function DiamondIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 9.5L12 3l7.5 6.5L12 21 4.5 9.5z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 9.5h15M9 9.5L12 3l3 6.5M9 9.5L12 21M15 9.5L12 21" />
+    </svg>
+  );
+}
+
+export function GraduationCapIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 9.5L12 5l9.5 4.5-9.5 4.5-9.5-4.5z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.5 11.5v4c0 1.38 2.46 2.5 5.5 2.5s5.5-1.12 5.5-2.5v-4" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21.5 9.5v5.5" />
+    </svg>
+  );
+}
+
+export function UsersIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+      <circle cx="9" cy="8.5" r="3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 19c0-3.31 2.69-6 6-6s6 2.69 6 6" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 6.2c1.4.4 2.4 1.68 2.4 3.2 0 1.34-.79 2.5-1.93 3.03" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 13.3c2.36.5 4 2.5 4 5.2" />
+    </svg>
+  );
+}
+
+export function TruckIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 6.5h11v9h-11z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10h4l3 3v2.5h-7z" />
+      <circle cx="7" cy="17.5" r="1.75" />
+      <circle cx="17.5" cy="17.5" r="1.75" />
     </svg>
   );
 }

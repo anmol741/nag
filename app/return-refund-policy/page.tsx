@@ -6,94 +6,101 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const LAST_UPDATED = "Last updated: September 2026 — Draft";
+const EFFECTIVE_DATE = "September 2026";
 
-// DRAFT POLICY CONTENT — MUST BE REPLACED OR APPROVED BY THE CLIENT BEFORE PRODUCTION LAUNCH.
+// Content sourced verbatim from docs/Nags-Beauty-Website-Policies.pdf ("Return & Refund Policy" section).
 const sections: PolicySection[] = [
   {
-    heading: "Return Eligibility",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Return Period",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Proof of Purchase",
+    heading: "1. 14-Day Return Policy",
     body: (
       <p>
-        A valid proof of purchase, such as an order confirmation or receipt, is required for all
-        returns and exchanges.
+        Products are eligible for return only when all of the following requirements are
+        satisfied: the product is unopened; unused; remains in its original condition and
+        packaging; is returned within 14 days of the original purchase date; and the original
+        purchase receipt is provided. No exceptions will be made to these requirements, except
+        where otherwise required by applicable law.
       </p>
     ),
   },
   {
-    heading: "Product Condition",
+    heading: "2. Sale and Discounted Items",
     body: (
       <p>
-        To be eligible for return, products must generally be unused, in their original packaging,
-        and in the same condition in which they were received.
+        ALL SALE AND DISCOUNTED ITEMS ARE FINAL SALE. Sale and discounted merchandise cannot be
+        returned, exchanged, or refunded, except where otherwise required by applicable law.
       </p>
     ),
   },
   {
-    heading: "Hygiene-Sensitive and Opened Beauty Products",
+    heading: "3. Beauty and Personal-Care Products",
     body: (
       <p>
-        For health and hygiene reasons, certain beauty and esthetic supply products — including
-        opened, used, or hygiene-sensitive items such as skincare, waxing, lash, and PMU
-        consumables — may not be eligible for return once opened or used. Specific hygiene-related
-        exclusions are [CLIENT TO CONFIRM].
+        For hygiene and safety reasons, opened or used beauty, cosmetic, personal-care, and
+        similar products cannot be returned. Customers should inspect products carefully before
+        opening or using them.
       </p>
     ),
   },
   {
-    heading: "Non-Returnable Products",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Sale and Clearance Products",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Damaged or Incorrect Products",
+    heading: "4. Proof of Purchase",
     body: (
       <p>
-        If you receive a damaged, defective, or incorrect product, please contact us as soon as
-        possible using the details below so we can arrange a resolution.
+        The original receipt is required for all returns. Returns without the original receipt
+        will not be accepted, except where otherwise required by applicable law.
       </p>
     ),
   },
   {
-    heading: "Return Authorization Process",
+    heading: "5. Refunds",
     body: (
       <p>
-        To start a return, please contact us using the details below with your order information
-        and reason for the return. Please do not send products back before receiving return
-        instructions from us.
+        Eligible returns will be inspected to confirm compliance with this policy. Once approved,
+        a refund will be processed using the applicable refund method available to us. Processing
+        times may vary depending on the customer&rsquo;s financial institution, credit card
+        issuer, or payment provider. Original shipping charges are not refundable unless otherwise
+        required by applicable law or the return results from an error on our part.
       </p>
     ),
   },
   {
-    heading: "Return Shipping Costs",
-    body: <p>[CLIENT TO CONFIRM]</p>,
+    heading: "6. Return Shipping",
+    body: (
+      <p>
+        Unless an incorrect or damaged item was supplied or applicable law requires otherwise,
+        customers are responsible for the costs associated with returning an online purchase.
+        Please contact us before shipping a return so that appropriate return instructions can be
+        provided.
+      </p>
+    ),
   },
   {
-    heading: "Refund Processing Time",
-    body: <p>[CLIENT TO CONFIRM]</p>,
+    heading: "7. Incorrect or Damaged Products",
+    body: (
+      <p>
+        If you receive an incorrect product or a product that arrives damaged, please contact us
+        promptly. Please retain the product, packaging, original receipt/order information and
+        photographs, where applicable, so we can review the issue.
+      </p>
+    ),
   },
   {
-    heading: "Exchanges",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Course Enrollment Cancellation and Refunds",
-    body: <p>[CLIENT TO CONFIRM]</p>,
+    heading: "8. Training Courses",
+    body: (
+      <p>
+        This Return &amp; Refund Policy applies to products and does not govern course deposits,
+        training fees, cancellations, rescheduling, or no-shows. Please refer to our Training
+        Course Registration, Cancellation &amp; Refund Policy.
+      </p>
+    ),
   },
 ];
 
 export default function ReturnRefundPolicyPage() {
   return (
-    <PolicyLayout title="Return & Refund Policy" lastUpdated={LAST_UPDATED} sections={sections} />
+    <PolicyLayout
+      title="Return & Refund Policy"
+      effectiveDate={EFFECTIVE_DATE}
+      sections={sections}
+    />
   );
 }

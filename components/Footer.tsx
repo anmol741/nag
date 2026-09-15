@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { business, courseCategories, mainNav } from "@/lib/site-config";
-import { InstagramIcon, MapPinIcon, PhoneIcon } from "./icons";
+import { MapPinIcon, PhoneIcon } from "./icons";
 import NewsletterForm from "./NewsletterForm";
+import SocialLinks from "./SocialLinks";
 
 export default function Footer() {
   return (
@@ -21,15 +22,7 @@ export default function Footer() {
               <PhoneIcon className="h-4 w-4 text-gold" />
               {business.phone}
             </a>
-            <a
-              href={business.instagram.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 flex items-center gap-2 text-sm text-white/70 hover:text-gold-light"
-            >
-              <InstagramIcon className="h-4 w-4 text-gold" />
-              {business.instagram.handle}
-            </a>
+            <SocialLinks className="mt-2 text-sm text-white/70" iconClassName="h-4 w-4 text-gold" />
           </div>
 
           <div>
@@ -80,9 +73,9 @@ export default function Footer() {
           <p className="text-xs text-white/40">
             &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
           </p>
-          {/* Policy pages currently show draft, client-review-pending content
-              (noindex until approved) — see the DRAFT POLICY CONTENT comment
-              in each page.tsx. */}
+          {/* Policy pages carry the client's approved PDF content but stay
+              noindex/nofollow (see each page's metadata) until the client
+              gives final legal sign-off. */}
           <nav aria-label="Policies" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-white/40">
             <Link href="/privacy-policy" className="hover:text-gold-light">
               Privacy Policy

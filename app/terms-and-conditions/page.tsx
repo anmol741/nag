@@ -1,179 +1,153 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PolicyLayout, { type PolicySection } from "@/components/PolicyLayout";
-import { business } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions",
+  title: "Terms & Conditions",
   robots: { index: false, follow: false },
 };
 
-const LAST_UPDATED = "Last updated: September 2026 — Draft";
+const EFFECTIVE_DATE = "September 2026";
 
-// DRAFT POLICY CONTENT — MUST BE REPLACED OR APPROVED BY THE CLIENT BEFORE PRODUCTION LAUNCH.
+// Content sourced verbatim from docs/Nags-Beauty-Website-Policies.pdf ("Terms & Conditions" section).
 const sections: PolicySection[] = [
   {
-    heading: "Acceptance of Terms",
+    heading: "Introduction",
     body: (
       <p>
-        By accessing or using the {business.name} website, placing a wholesale order, or
-        enrolling in a training course, you agree to be bound by these Terms and Conditions. If
-        you do not agree to these terms, please do not use our website or services.
+        These Terms &amp; Conditions apply to your use of www.nagsbeautysupply.com and to
+        purchases, registrations, and other transactions made with Nag&rsquo;s Beauty Supplies
+        &amp; Training Centre. By using our website, purchasing products, or registering for
+        training, you agree to the applicable terms set out below.
       </p>
     ),
   },
   {
-    heading: "Website Eligibility",
+    heading: "1. Products and Services",
     body: (
       <p>
-        Our website and wholesale pricing are intended for licensed and aspiring beauty
-        professionals, students, and businesses. By using our website, you confirm that you are
-        legally able to enter into a binding agreement.
+        Nag&rsquo;s Beauty sells beauty supplies and provides beauty-related education and
+        training. We make reasonable efforts to provide accurate descriptions, photographs,
+        pricing, availability, and other information. Product colours, packaging, labelling, or
+        appearance may differ from images displayed online, including due to screen settings or
+        manufacturer changes. We reserve the right to correct errors or inaccuracies and update
+        website information where necessary.
       </p>
     ),
   },
   {
-    heading: "Customer Accounts",
+    heading: "2. Pricing and Payment",
     body: (
       <p>
-        If you create an account with us, you are responsible for maintaining the confidentiality
-        of your account details and for all activity that occurs under your account. Please
-        notify us if you believe your account has been used without your permission.
+        Unless otherwise indicated, prices are stated in Canadian dollars. Applicable taxes,
+        shipping charges, and other applicable charges will be shown or calculated during
+        checkout. Prices, products, promotions, and availability may change without notice.
+        Customers are responsible for providing complete and accurate payment and billing
+        information.
       </p>
     ),
   },
   {
-    heading: "Product Information and Availability",
+    heading: "3. Orders",
     body: (
       <p>
-        We make reasonable efforts to display accurate product descriptions, images, and
-        availability. However, we do not guarantee that all product information is complete,
-        current, or error-free, and product availability may change without notice.
+        Submitting an order does not necessarily constitute acceptance of the order. We reserve
+        the right to refuse or cancel an order where reasonably necessary, including due to
+        product availability, incorrect pricing or product information, payment issues, suspected
+        fraud, or other legitimate business reasons. If we cancel an order after payment has been
+        successfully processed, the applicable amount will be refunded.
       </p>
     ),
   },
   {
-    heading: "Pricing and Taxes",
+    heading: "4. Shipping",
     body: (
       <p>
-        Product and course prices are listed in Canadian dollars unless otherwise stated and are
-        subject to change without notice. Applicable taxes are added at checkout in accordance
-        with applicable law.
-      </p>
-    ),
-  },
-  {
-    heading: "Orders and Order Acceptance",
-    body: (
-      <p>
-        Placing an order through our website is an offer to purchase. We reserve the right to
-        accept, decline, or cancel any order, including in cases of pricing errors, suspected
-        fraud, or product unavailability.
-      </p>
-    ),
-  },
-  {
-    heading: "Wholesale Purchasing",
-    body: (
-      <p>
-        Some products and pricing on our website are offered on a wholesale basis to qualifying
-        professional and business customers. Wholesale account eligibility, terms, and minimums
-        are [CLIENT TO CONFIRM].
-      </p>
-    ),
-  },
-  {
-    heading: "Course Information and Enrollment",
-    body: (
-      <p>
-        Course descriptions, schedules, and pricing are provided for informational purposes and
-        may change. Enrollment in a course is confirmed upon our acceptance of your registration
-        and, where applicable, receipt of payment.
-      </p>
-    ),
-  },
-  {
-    heading: "Payments",
-    body: (
-      <p>
-        Payment for products and courses is due at the time of order or enrollment unless
-        otherwise agreed in writing. Payments are processed through our third-party payment
-        provider. [CLIENT TO CONFIRM].
-      </p>
-    ),
-  },
-  {
-    heading: "Shipping",
-    body: (
-      <p>
-        Shipping methods, rates, and delivery regions are described in our{" "}
-        <a href="/shipping-policy" className="text-gold-dark hover:underline">
+        Nag&rsquo;s Beauty currently ships within Canada only. Shipping charges and available
+        delivery options, where applicable, will be presented during checkout. Delivery dates are
+        estimates and may be affected by circumstances outside our reasonable control. Please
+        review our separate{" "}
+        <Link href="/shipping-policy" className="text-gold-dark hover:underline">
           Shipping Policy
-        </a>
-        . Shipping details are [CLIENT TO CONFIRM].
+        </Link>{" "}
+        for complete details.
       </p>
     ),
   },
   {
-    heading: "Returns and Refunds",
+    heading: (
+      <Link href="/return-refund-policy" className="text-gold-dark hover:underline">
+        5. Product Returns
+      </Link>
+    ),
     body: (
       <p>
-        Returns and refunds for products, and cancellation terms for courses, are described in
-        our{" "}
-        <a href="/return-refund-policy" className="text-gold-dark hover:underline">
-          Return &amp; Refund Policy
-        </a>
-        .
+        Eligible products must be unopened, unused, in their original condition and packaging,
+        returned within 14 days of purchase, and accompanied by the original receipt. No
+        exceptions will be made to these requirements, except where otherwise required by
+        applicable law. All sale and discounted items are final sale.
       </p>
     ),
   },
   {
-    heading: "Intellectual Property",
+    heading: "6. Training Programs",
     body: (
       <p>
-        All website content, including text, graphics, logos, images, and course materials, is
-        the property of {business.name} or its licensors and is protected by applicable
-        intellectual property laws. You may not reproduce, distribute, or use this content without
-        our prior written permission.
+        Training courses, workshops, and classes are subject to availability, applicable
+        prerequisites, payment requirements, and the terms communicated at registration. Course
+        deposits are non-refundable, except where otherwise required by applicable law. Students
+        must comply with our Training Course Registration, Cancellation &amp; Refund Policy.
       </p>
     ),
   },
   {
-    heading: "Prohibited Use",
+    heading: "7. Intellectual Property",
     body: (
       <p>
-        You agree not to use our website for any unlawful purpose, to attempt to gain
-        unauthorized access to our systems, to interfere with the operation of our website, or to
-        misuse any content, pricing, or course materials made available to you.
+        Unless otherwise indicated, original website content, branding, graphics, photographs,
+        educational content, course materials, manuals, and other materials belong to
+        Nag&rsquo;s Beauty or are used with permission. They may not be reproduced, distributed,
+        sold, published, or commercially exploited without authorization except as permitted by
+        law.
       </p>
     ),
   },
   {
-    heading: "Limitation of Liability",
+    heading: "8. Appropriate Website Use",
     body: (
       <p>
-        To the fullest extent permitted by law, {business.name} is not liable for any indirect,
-        incidental, or consequential damages arising from your use of our website, products, or
-        courses. Our total liability for any claim will not exceed the amount you paid for the
-        applicable product or course.
+        Users must not misuse our website, interfere with its operation, attempt unauthorized
+        access, introduce malicious software, engage in fraudulent activities, or use our website
+        for unlawful purposes.
       </p>
     ),
   },
   {
-    heading: "Governing Law",
+    heading: "9. Limitation of Liability",
     body: (
       <p>
-        These Terms and Conditions are governed by the laws of the Province of British Columbia
-        and the applicable laws of Canada, without regard to conflict-of-law principles.
+        To the extent permitted by applicable law, Nag&rsquo;s Beauty will not be responsible for
+        indirect, incidental, special, or consequential losses arising from the use of our
+        website, products, or services. Nothing in these Terms is intended to exclude or restrict
+        rights or remedies that cannot lawfully be excluded or restricted.
       </p>
     ),
   },
   {
-    heading: "Changes to the Terms",
+    heading: "10. Governing Law",
     body: (
       <p>
-        We may update these Terms and Conditions from time to time. Changes will be posted on this
-        page with an updated &ldquo;last updated&rdquo; date. Continued use of our website after
-        changes are posted constitutes acceptance of the revised terms.
+        These Terms &amp; Conditions are governed by the applicable laws of the Province of
+        British Columbia and the federal laws of Canada applicable therein.
+      </p>
+    ),
+  },
+  {
+    heading: "11. Changes to These Terms",
+    body: (
+      <p>
+        We may revise these Terms &amp; Conditions periodically. Updated terms will be posted on
+        our website with the applicable effective date.
       </p>
     ),
   },
@@ -181,6 +155,6 @@ const sections: PolicySection[] = [
 
 export default function TermsAndConditionsPage() {
   return (
-    <PolicyLayout title="Terms and Conditions" lastUpdated={LAST_UPDATED} sections={sections} />
+    <PolicyLayout title="Terms & Conditions" effectiveDate={EFFECTIVE_DATE} sections={sections} />
   );
 }

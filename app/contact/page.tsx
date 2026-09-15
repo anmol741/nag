@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { business } from "@/lib/site-config";
-import { InstagramIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
+import { MapPinIcon, PhoneIcon } from "@/components/icons";
 import ContactForm from "@/components/ContactForm";
+import SocialLinks from "@/components/SocialLinks";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -47,15 +48,7 @@ export default function ContactPage() {
                 </a>
               </div>
               <div className="flex items-start gap-3">
-                <InstagramIcon className="mt-0.5 h-5 w-5 shrink-0 text-gold-dark" />
-                <a
-                  href={business.instagram.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-ink hover:text-gold-dark"
-                >
-                  {business.instagram.handle}
-                </a>
+                <SocialLinks className="font-medium text-ink" iconClassName="h-5 w-5 text-gold-dark" />
               </div>
               <p className="text-sm text-ink/60">{business.hours}</p>
             </div>

@@ -1,90 +1,100 @@
 import type { Metadata } from "next";
 import PolicyLayout, { type PolicySection } from "@/components/PolicyLayout";
-import { business } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Shipping Policy",
   robots: { index: false, follow: false },
 };
 
-const LAST_UPDATED = "Last updated: September 2026 — Draft";
+const EFFECTIVE_DATE = "September 2026";
 
-// DRAFT POLICY CONTENT — MUST BE REPLACED OR APPROVED BY THE CLIENT BEFORE PRODUCTION LAUNCH.
+// Content sourced verbatim from docs/Nags-Beauty-Website-Policies.pdf ("Shipping Policy" section).
 const sections: PolicySection[] = [
   {
-    heading: "Available Delivery Regions",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Order-Processing Time",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Shipping Methods and Carriers",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Shipping Rates",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Free-Shipping Conditions",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Local Pickup",
+    heading: "1. Shipping Area",
     body: (
       <p>
-        Local pickup may be available from our Langley, BC location at {business.address.full}.
-        Availability, hours, and any conditions for local pickup are [CLIENT TO CONFIRM].
+        We currently ship within Canada only. International shipping is not currently available
+        through our website.
       </p>
     ),
   },
   {
-    heading: "Tracking Information",
+    heading: "2. Order Processing",
     body: (
       <p>
-        Where a shipping method includes tracking, tracking information will be provided to the
-        email or contact information on file for the order once it has shipped.
+        Orders are processed after payment has been successfully received or authorized.
+        Processing times may vary depending on product availability, order volume, weekends,
+        statutory holidays, and other circumstances.
       </p>
     ),
   },
   {
-    heading: "Incorrect Shipping Addresses",
+    heading: "3. Shipping Charges",
     body: (
       <p>
-        It is the customer&rsquo;s responsibility to provide an accurate and complete shipping
-        address at checkout. We are not responsible for delays, additional charges, or lost
-        shipments resulting from an incorrect or incomplete address supplied by the customer.
+        Applicable shipping charges will be displayed or calculated during checkout before you
+        complete your purchase.
       </p>
     ),
   },
   {
-    heading: "Delayed, Lost or Damaged Shipments",
+    heading: "4. Delivery Times",
     body: (
       <p>
-        While we make reasonable efforts to ensure orders arrive on time and in good condition,
-        delays, loss, or damage can occasionally occur once a package is in the carrier&rsquo;s
-        possession. If your order arrives damaged or does not arrive, please contact us using the
-        details below so we can assist you.
+        Any delivery dates or timeframes provided are estimates only and are not guaranteed.
+        Delivery may be affected by destination, carrier operations, weather, statutory holidays,
+        peak periods, or other circumstances outside our reasonable control.
       </p>
     ),
   },
   {
-    heading: "International Shipping",
-    body: <p>[CLIENT TO CONFIRM]</p>,
-  },
-  {
-    heading: "Duties and Taxes",
+    heading: "5. Shipping Address",
     body: (
       <p>
-        Any applicable duties, customs fees, or taxes on shipments outside of Canada are the
-        responsibility of the customer, unless otherwise stated at checkout.
+        Customers are responsible for providing a complete and accurate shipping address. Please
+        carefully review your shipping information before submitting your order. If you notice an
+        error after placing an order, contact us immediately. We cannot guarantee that an address
+        can be changed once an order has been processed or shipped. Where permitted by law,
+        additional costs resulting from an incorrect or incomplete address may be the
+        customer&rsquo;s responsibility.
+      </p>
+    ),
+  },
+  {
+    heading: "6. Tracking",
+    body: (
+      <p>
+        Where tracking is available, tracking information may be provided after your order has
+        been shipped. Please allow sufficient time for the shipping carrier&rsquo;s tracking
+        system to update.
+      </p>
+    ),
+  },
+  {
+    heading: "7. Delayed or Missing Packages",
+    body: (
+      <p>
+        After an order has been transferred to the shipping carrier, circumstances outside our
+        direct control may affect delivery. If a shipment is significantly delayed or appears to
+        be missing, please contact us. We will assist with reviewing the shipment and, where
+        appropriate, contacting the carrier.
+      </p>
+    ),
+  },
+  {
+    heading: "8. Damaged Orders",
+    body: (
+      <p>
+        If your order arrives damaged, please contact us promptly. Please retain the product,
+        packaging, receipt/order information and, where possible, photographs of the damaged
+        product and shipping packaging. We will review the circumstances and advise you of the
+        appropriate next steps.
       </p>
     ),
   },
 ];
 
 export default function ShippingPolicyPage() {
-  return <PolicyLayout title="Shipping Policy" lastUpdated={LAST_UPDATED} sections={sections} />;
+  return <PolicyLayout title="Shipping Policy" effectiveDate={EFFECTIVE_DATE} sections={sections} />;
 }

@@ -236,19 +236,13 @@ export interface ZeroPriceEntry {
 
 const zeroPriceReport = new Map<string, ZeroPriceEntry>();
 
-function recordZeroPrice(raw: WooCommerceProduct, name: string) {
+function recordZeroPrice(raw: WooCommerceProduct, name: string, rawPrice: string) {
   const id = String(raw.id);
   if (!zeroPriceReport.has(id)) {
-    zeroPriceReport.set(id, {
-      id,
-      slug: raw.slug,
-      name,
-      rawPrice: raw.prices.regular_price,
-      firstSeen: new Date().toISOString(),
-    });
+    zeroPriceReport.set(id, { id, slug: raw.slug, name, rawPrice, firstSeen: new Date().toISOString() });
   }
   if (process.env.NODE_ENV !== "production") {
-    console.warn(`[woocommerce] product has no valid price — id=${id} name="${name}" rawPrice="${raw.prices.regular_price}"`);
+    console.warn(`[woocommerce] product has no valid price — id=${id} name="${name}" rawPrice="${rawPrice}"`);
   }
 }
 
@@ -261,27 +255,56 @@ export function getZeroPriceReport(): ZeroPriceEntry[] {
 // Mapping: raw WooCommerce shapes -> this app's Product / category view models
 // ---------------------------------------------------------------------------
 
-function mapImage(image: WooCommerceImage, fallbackAlt: string): ProductImage {
+/** Returns null (rather than a broken ProductImage) for an image entry with no usable src — e.g. `<Image src={undefined}>` throws, so a malformed entry must be filtered out, not passed through. */
+function mapImage(image: WooCommerceImage, fallbackAlt: string): ProductImage | null {
+  if (!image?.src) return null;
   return { src: image.src, alt: decodeEntities(image.alt) || fallbackAlt };
 }
 
 function mapAttribute(attribute: WooCommerceAttribute): ProductAttribute {
   return {
-    name: decodeEntities(attribute.name),
-    options: attribute.terms.map((term) => decodeEntities(term.name)),
+    name: decodeEntities(attribute?.name ?? ""),
+    options: (attribute?.terms ?? []).map((term) => decodeEntities(term.name)),
   };
 }
 
+// The WooCommerce Store API has always returned well-formed arrays for
+// every field below in production use (verified against the live catalogue),
+// but it's an external, uncontrolled data source — a transient upstream
+// hiccup (rate limiting, a caching/security plugin, a malformed edit in
+// WooCommerce Admin) could still return `null`/omit a field for a single
+// product without the whole request failing. `?? []` here means one
+// malformed product degrades gracefully instead of throwing out of a
+// Server Component render.
 export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
   const name = decodeEntities(raw.name);
-  const images = raw.images.map((img) => mapImage(img, name));
+  const images = (raw.images ?? []).map((img) => mapImage(img, name)).filter((img): img is ProductImage => img !== null);
   const [image, ...gallery] = images.length > 0 ? images : [PRODUCT_IMAGE_FALLBACK];
-  const categories = raw.categories.map((c) => decodeEntities(c.name));
+  const rawCategories = raw.categories ?? [];
+  const rawTags = raw.tags ?? [];
+  const rawAttributes = raw.attributes ?? [];
+  const categories = rawCategories.map((c) => decodeEntities(c.name));
   const reviewCount = raw.review_count ?? 0;
 
-  const hasValidPrice = isValidPriceAmount(raw.prices.regular_price);
-  if (!hasValidPrice) recordZeroPrice(raw, name);
-  const hasValidSalePrice = raw.on_sale && isValidPriceAmount(raw.prices.price);
+  // A missing/malformed `prices` object would make every price-dependent
+  // field below throw — an empty-string amount is treated as invalid by
+  // isValidPriceAmount(), which is exactly the safe "unknown price" state.
+  const prices: WooCommercePrice = raw.prices ?? {
+    price: "",
+    regular_price: "",
+    sale_price: "",
+    price_range: null,
+    currency_code: "",
+    currency_symbol: "",
+    currency_minor_unit: 2,
+    currency_decimal_separator: ".",
+    currency_thousand_separator: ",",
+    currency_prefix: "",
+    currency_suffix: "",
+  };
+  const hasValidPrice = isValidPriceAmount(prices.regular_price);
+  if (!hasValidPrice) recordZeroPrice(raw, name, prices.regular_price);
+  const hasValidSalePrice = Boolean(raw.on_sale) && isValidPriceAmount(prices.price);
 
   return {
     id: String(raw.id),
@@ -292,14 +315,14 @@ export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
     permalink: raw.permalink,
     image,
     gallery: gallery.length > 0 ? gallery : undefined,
-    price: hasValidPrice ? formatWooPrice(raw.prices, raw.prices.regular_price) : CONTACT_FOR_PRICE,
-    salePrice: hasValidSalePrice ? formatWooPrice(raw.prices, raw.prices.price) : undefined,
+    price: hasValidPrice ? formatWooPrice(prices, prices.regular_price) : CONTACT_FOR_PRICE,
+    salePrice: hasValidSalePrice ? formatWooPrice(prices, prices.price) : undefined,
     hasValidPrice,
     category: categories[0] ?? "",
-    primaryCategorySlug: raw.categories[0]?.slug,
+    primaryCategorySlug: rawCategories[0]?.slug,
     categories: categories.length > 0 ? categories : undefined,
-    tags: raw.tags.length > 0 ? raw.tags.map((t) => decodeEntities(t.name)) : undefined,
-    attributes: raw.attributes.length > 0 ? raw.attributes.map(mapAttribute) : undefined,
+    tags: rawTags.length > 0 ? rawTags.map((t) => decodeEntities(t.name)) : undefined,
+    attributes: rawAttributes.length > 0 ? rawAttributes.map(mapAttribute) : undefined,
     // This catalogue currently contains no variable products; variation
     // pricing/stock isn't exposed on the list/single product payload, so
     // selectors render from `attributes` and this stays unpopulated.
@@ -324,7 +347,7 @@ export function mapWooCategoryToCategoryData(raw: WooCommerceCategory): ProductC
     name: decodeEntities(raw.name),
     parentId: raw.parent ? String(raw.parent) : null,
     count: raw.count,
-    image: raw.image ? mapImage(raw.image, decodeEntities(raw.name)) : PRODUCT_IMAGE_FALLBACK,
+    image: (raw.image ? mapImage(raw.image, decodeEntities(raw.name)) : null) ?? PRODUCT_IMAGE_FALLBACK,
     description: raw.description ? toPlainText(raw.description) : undefined,
   };
 }
@@ -387,6 +410,35 @@ async function wooRequest<T>(route: string, params: Record<string, string | numb
     total: Number.isFinite(total) ? total : count,
     totalPages: Number.isFinite(totalPages) ? totalPages : 1,
   };
+}
+
+/**
+ * WooCommerce Store API list endpoints are expected to return a JSON array
+ * — but a transient upstream problem (rate limiting, a caching/security
+ * plugin, a PHP error page, WordPress maintenance mode) can still respond
+ * with HTTP 200 and a non-array body (an error object, or nothing usable).
+ * Calling `.map()` on that unchecked would throw a raw TypeError straight
+ * out of a Server Component's render — which is exactly the failure mode
+ * this guards against, converting it into the same safe WooCommerceApiError
+ * every other failure path already produces, so it's handled by the
+ * existing error.tsx boundaries instead of crashing the render.
+ */
+function asProductArray(data: unknown, context: string): WooCommerceProduct[] {
+  if (!Array.isArray(data)) {
+    console.error(`[woocommerce] expected an array of products from ${context}, got:`, typeof data, data);
+    throw new WooCommerceApiError();
+  }
+  // Drop any individual entry that isn't a usable object (e.g. a stray
+  // null) rather than letting the whole page fail for one bad item.
+  return data.filter((item): item is WooCommerceProduct => Boolean(item) && typeof item === "object");
+}
+
+function asCategoryArray(data: unknown, context: string): WooCommerceCategory[] {
+  if (!Array.isArray(data)) {
+    console.error(`[woocommerce] expected an array of categories from ${context}, got:`, typeof data, data);
+    throw new WooCommerceApiError();
+  }
+  return data.filter((item): item is WooCommerceCategory => Boolean(item) && typeof item === "object");
 }
 
 // ---------------------------------------------------------------------------
@@ -461,13 +513,13 @@ export async function getProducts(params: GetProductsParams = {}): Promise<Produ
     stock_status: params.stockStatus,
   });
 
-  return { products: data.map(mapWooProductToProduct), total, totalPages, page, perPage };
+  return { products: asProductArray(data, "getProducts").map(mapWooProductToProduct), total, totalPages, page, perPage };
 }
 
 /** Fetches a single product by its exact slug, or null if no product matches. */
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const { data } = await wooRequest<WooCommerceProduct[]>("/products", { slug, per_page: 1 });
-  const raw = data[0];
+  const raw = asProductArray(data, "getProductBySlug")[0];
   return raw ? mapWooProductToProduct(raw) : null;
 }
 
@@ -478,7 +530,7 @@ export async function getProductCategories(): Promise<ProductCategoryData[]> {
     orderby: "name",
     order: "asc",
   });
-  return data.map(mapWooCategoryToCategoryData);
+  return asCategoryArray(data, "getProductCategories").map(mapWooCategoryToCategoryData);
 }
 
 /** Fetches only the top-level (no parent) categories, for primary shop navigation. */
@@ -520,7 +572,7 @@ export async function searchProducts(query: string, params: Omit<GetProductsPara
 /** Fetches WooCommerce's related products for a given product ID. */
 export async function getRelatedProducts(productId: string, limit = 4): Promise<Product[]> {
   const { data } = await wooRequest<WooCommerceProduct[]>("/products", { related: productId, per_page: limit });
-  return data.map(mapWooProductToProduct);
+  return asProductArray(data, "getRelatedProducts").map(mapWooProductToProduct);
 }
 
 /**
@@ -542,5 +594,5 @@ export async function getProductsByIds(ids: string[]): Promise<Product[]> {
     include: cleanIds.join(","),
     per_page: cleanIds.length,
   });
-  return data.map(mapWooProductToProduct);
+  return asProductArray(data, "getProductsByIds").map(mapWooProductToProduct);
 }
