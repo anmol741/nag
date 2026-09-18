@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow" />
     <title>Netlify Forms Detection</title>
   </head>
   <body>
@@ -13,15 +14,16 @@
       Netlify's deploy-time form crawler can't see forms rendered only by
       React components (especially ones on dynamically-rendered routes,
       e.g. /enroll). This file exists purely so that crawler can detect
-      each form below as static HTML. It is never served to visitors as a
-      real page — the live, interactive forms are the React components
-      noted above each one, and they submit here in the background via
-      fetch(). Keep every field name in sync with the corresponding
-      component's submit handler.
+      each form below as static HTML at build time. It is never served as a
+      real page — noindex above keeps it out of search results, and the
+      live, interactive forms are the React components noted above each
+      one, which submit to "/" in the background via fetch() (see
+      lib/netlify-forms.ts), not to this file. Keep every field name in
+      sync with the corresponding component's submit handler.
     -->
 
     <!-- components/ContactForm.tsx, rendered on /contact -->
-    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
       <input type="hidden" name="form-name" value="contact" />
       <input name="bot-field" type="text" />
       <input name="name" type="text" />
@@ -31,7 +33,7 @@
     </form>
 
     <!-- components/EnrollForm.tsx, rendered on /enroll -->
-    <form name="enrollment" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <form name="enrollment" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
       <input type="hidden" name="form-name" value="enrollment" />
       <input name="bot-field" type="text" />
       <input name="firstName" type="text" />
@@ -46,7 +48,7 @@
     </form>
 
     <!-- components/SignupForm.tsx, rendered on /newsletter -->
-    <form name="newsletter-course-updates" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <form name="newsletter-course-updates" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
       <input type="hidden" name="form-name" value="newsletter-course-updates" />
       <input name="bot-field" type="text" />
       <input name="name" type="text" />
@@ -57,7 +59,7 @@
     </form>
 
     <!-- components/NewsletterForm.tsx, rendered in the footer on every page -->
-    <form name="footer-newsletter" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <form name="footer-newsletter" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
       <input type="hidden" name="form-name" value="footer-newsletter" />
       <input name="bot-field" type="text" />
       <input name="email" type="email" />
