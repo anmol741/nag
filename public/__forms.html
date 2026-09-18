@@ -5,7 +5,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Netlify Forms Detection</title>
   </head>
-  <body id="netlify-forms-endpoint">
+  <body>
     <!--
       Static-detection file for Netlify Forms, per the official Next.js/
       OpenNext guidance: https://opennext.js.org/netlify/forms
@@ -25,11 +25,11 @@
       Netlify Forms even though the fetch "succeeded". This file has no app
       route behind it, so Netlify's proxy can actually intercept the POST.
 
-      The `id="netlify-forms-endpoint"` on <body> is a marker
-      lib/netlify-forms.ts checks for in the response text, so a misrouted
-      submission that still returns some 200 HTML page can't be mistaken
-      for success. Keep every field name in sync with the corresponding
-      component's submit handler.
+      lib/netlify-forms.ts treats any 2xx response from this endpoint as
+      success and doesn't parse or inspect the body — Netlify's own
+      response here is an HTML page, not JSON, and its exact contents
+      aren't a contract. Keep every field name in sync with the
+      corresponding component's submit handler.
     -->
 
     <!-- components/ContactForm.tsx, rendered on /contact -->
