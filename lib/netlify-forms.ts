@@ -29,10 +29,6 @@ const FORMS_ENDPOINT = "/__forms.html";
 export class NetlifyFormError extends Error {}
 
 export async function submitNetlifyForm(formName: string, data: Record<string, string>): Promise<void> {
-  if (!formName) {
-    throw new NetlifyFormError("Netlify form submission is missing a form name.");
-  }
-
   const body = new URLSearchParams({ "form-name": formName, ...data }).toString();
 
   const response = await fetch(FORMS_ENDPOINT, {
