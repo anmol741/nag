@@ -18,6 +18,7 @@ export default function AccountNavigation() {
   const pathname = usePathname();
   const router = useRouter();
 
+  
   function handleLogout() {
     logout();
     router.push("/account");
