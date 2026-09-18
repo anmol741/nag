@@ -5,7 +5,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Netlify Forms Detection</title>
   </head>
-  <body>
+  <body id="netlify-forms-endpoint">
     <!--
       Static-detection file for Netlify Forms, per the official Next.js/
       OpenNext guidance: https://opennext.js.org/netlify/forms
@@ -14,12 +14,22 @@
       Netlify's deploy-time form crawler can't see forms rendered only by
       React components (especially ones on dynamically-rendered routes,
       e.g. /enroll). This file exists purely so that crawler can detect
-      each form below as static HTML at build time. It is never served as a
-      real page — noindex above keeps it out of search results, and the
-      live, interactive forms are the React components noted above each
-      one, which submit to "/" in the background via fetch() (see
-      lib/netlify-forms.ts), not to this file. Keep every field name in
-      sync with the corresponding component's submit handler.
+      each form below as static HTML at build time — noindex above keeps it
+      out of search results.
+
+      It is ALSO the live runtime submission target: the React forms POST
+      here directly (see lib/netlify-forms.ts), not to "/". "/" is a real
+      Next.js app route, so a POST there gets a normal 200 response from
+      the homepage instead of being intercepted by Netlify's forms proxy —
+      confirmed by request logging showing submissions never reached
+      Netlify Forms even though the fetch "succeeded". This file has no app
+      route behind it, so Netlify's proxy can actually intercept the POST.
+
+      The `id="netlify-forms-endpoint"` on <body> is a marker
+      lib/netlify-forms.ts checks for in the response text, so a misrouted
+      submission that still returns some 200 HTML page can't be mistaken
+      for success. Keep every field name in sync with the corresponding
+      component's submit handler.
     -->
 
     <!-- components/ContactForm.tsx, rendered on /contact -->
