@@ -5,14 +5,6 @@ export interface Course {
   title: string;
   price: string;
   priceNote?: string;
-  /**
-   * INTERNAL ONLY — never render this field on any public page. Flags a
-   * known price discrepancy between the live WordPress site and the
-   * newer client course document this `price` value was taken from, so it
-   * doesn't get silently forgotten before launch. See the file-level
-   * comment above `courses` for the specifics.
-   */
-  priceReviewNote?: string;
   duration: string;
   level: string;
   language: string;
@@ -34,16 +26,6 @@ export interface Course {
   certificateNote?: string;
 }
 
-// DEVELOPER NOTE — PRICE CONFIRMATION NEEDED BEFORE PRODUCTION LAUNCH
-// ---------------------------------------------------------------------
-// Two courses below carry a price from the newer client course document
-// that differs from what's currently live on the WordPress site:
-//   - Full Body Waxing Certification: WordPress = $850, here = $1,500
-//   - Powder Ombre Shading Certification: WordPress = $899, here = $995
-// Per instruction, the newer client-document price is kept as-is and NOT
-// auto-corrected. Both figures need final client confirmation before this
-// goes live. This note is internal-only (see `priceReviewNote` on the
-// `Course` type) — do not surface it on any public page.
 export const courses: Course[] = [
   {
     slug: "bb-glow-certification",
@@ -88,8 +70,7 @@ export const courses: Course[] = [
   {
     slug: "full-body-waxing-certification",
     title: "Full Body Waxing Certification",
-    price: "$1,500",
-    priceReviewNote: "WordPress currently shows $850 for this course — confirm final price with client before launch.",
+    price: "$1,499.00",
     duration: "3 Days",
     level: "Level 1",
     language: "English",
@@ -495,8 +476,7 @@ export const courses: Course[] = [
   {
     slug: "powder-ombre-shading-certification-course",
     title: "Powder Ombre Shading Certification Course",
-    price: "$995",
-    priceReviewNote: "WordPress currently shows $899 for this course — confirm final price with client before launch.",
+    price: "$995.00",
     duration: "1 Day",
     level: "Level 1",
     language: "English",
@@ -561,8 +541,8 @@ export const courses: Course[] = [
     level: "Level 1",
     language: "English",
     category: "makeup-hair",
-    image: "/file_00000000c67081fdbe499ba3c908816c.png",
-    imageAlt: "Nag's Beauty Supplies & Training Center logo",
+    image: "/images/courses/advanced-hair-cutting-course.jpg",
+    imageAlt: "Professional stylist demonstrating an advanced hair-cutting technique",
     imageFit: "contain",
     imagePosition: "center",
     imageWidth: 1536,

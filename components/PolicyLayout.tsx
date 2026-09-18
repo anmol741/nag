@@ -8,7 +8,7 @@ export type PolicySection = {
 };
 
 /**
- * Shared layout for the four policy pages. Content on each page comes
+ * Shared layout for the five policy pages. Content on each page comes
  * verbatim from the client's signed policy PDF
  * (docs/Nags-Beauty-Website-Policies.pdf) — this component only supplies
  * the shared chrome (heading, effective date, contact block) around it.

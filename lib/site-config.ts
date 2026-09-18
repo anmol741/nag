@@ -24,13 +24,13 @@ export const business = {
 
 /**
  * Contact details as printed in the client's signed policy PDF
- * (docs/Nags-Beauty-Website-Policies.pdf), used verbatim on the four policy
- * pages only. This address ("19623 56 Ave, Langley, BC, Canada") differs
+ * (docs/Nags-Beauty-Website-Policies.pdf), used verbatim on all five policy
+ * pages only. This address ("19623 56 Ave, Langley, BC, Canada") is
+ * client-confirmed as final for the policy pages and intentionally differs
  * from the sitewide `business.address` above ("102-19623 56 Avenue, Langley,
- * BC V3A 3X7") — unit 102 and the postal code are missing from the PDF.
- * Do not merge the two or guess which is correct; the client needs to
- * confirm whether the PDF address should gain the unit/postal code. Until
- * then this stays a separate, deliberately literal source for policy copy.
+ * BC V3A 3X7") — do not add unit 102 or the postal code here, and do not
+ * merge the two formats. This stays a separate, deliberately literal source
+ * for policy copy; `business.address` elsewhere on the site is unaffected.
  */
 export const policyContact = {
   businessName: "Nag's Beauty Supplies & Training Centre",
