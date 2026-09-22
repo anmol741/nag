@@ -282,6 +282,7 @@ export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
   const [image, ...gallery] = images.length > 0 ? images : [PRODUCT_IMAGE_FALLBACK];
   const rawCategories = raw.categories ?? [];
   const rawTags = raw.tags ?? [];
+  const rawBrands = raw.brands ?? [];
   const rawAttributes = raw.attributes ?? [];
   const categories = rawCategories.map((c) => decodeEntities(c.name));
   const reviewCount = raw.review_count ?? 0;
@@ -322,6 +323,7 @@ export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
     primaryCategorySlug: rawCategories[0]?.slug,
     categories: categories.length > 0 ? categories : undefined,
     tags: rawTags.length > 0 ? rawTags.map((t) => decodeEntities(t.name)) : undefined,
+    brands: rawBrands.length > 0 ? rawBrands.map((b) => decodeEntities(b.name)) : undefined,
     attributes: rawAttributes.length > 0 ? rawAttributes.map(mapAttribute) : undefined,
     // This catalogue currently contains no variable products; variation
     // pricing/stock isn't exposed on the list/single product payload, so
@@ -338,6 +340,35 @@ export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
     stockMessage: raw.stock_availability?.text ? decodeEntities(raw.stock_availability.text) : undefined,
     reviews: reviewCount > 0 ? { count: reviewCount, averageRating: Number.parseFloat(raw.average_rating) || 0 } : undefined,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Temporary GlyMed exclusion — hides GlyMed products storefront-wide until
+// the business receives brand authorization. WooCommerce product
+// status/catalog visibility is the primary control (see the client-facing
+// restore instructions in the audit report); this is a defensive second
+// layer so a stale/cached Store API response can never surface a GlyMed
+// product here. Case-insensitive; matches on name, category, tags, and
+// brand. Remove this block (and its two call sites below) once the brand
+// authorization is confirmed and WooCommerce visibility has been restored.
+// ---------------------------------------------------------------------------
+
+const GLYMED_PATTERN = /glymed/i;
+
+function isGlyMedProduct(product: Pick<Product, "name" | "category" | "categories" | "tags" | "brands">): boolean {
+  const haystack = [product.name, product.category, ...(product.categories ?? []), ...(product.tags ?? []), ...(product.brands ?? [])];
+  return haystack.some((value) => Boolean(value) && GLYMED_PATTERN.test(value));
+}
+
+/**
+ * Filters GlyMed products out of a mapped product list. Note: `total`/
+ * `totalPages` from `getProducts` come from WooCommerce's response headers
+ * for the *unfiltered* query, so a page containing GlyMed products may
+ * render fewer cards than its stated per-page count — cosmetic only, and
+ * resolved once GlyMed products are hidden at the WooCommerce level instead.
+ */
+function excludeGlyMed(products: Product[]): Product[] {
+  return products.filter((product) => !isGlyMedProduct(product));
 }
 
 export function mapWooCategoryToCategoryData(raw: WooCommerceCategory): ProductCategoryData {
@@ -513,14 +544,17 @@ export async function getProducts(params: GetProductsParams = {}): Promise<Produ
     stock_status: params.stockStatus,
   });
 
-  return { products: asProductArray(data, "getProducts").map(mapWooProductToProduct), total, totalPages, page, perPage };
+  const products = excludeGlyMed(asProductArray(data, "getProducts").map(mapWooProductToProduct));
+  return { products, total, totalPages, page, perPage };
 }
 
-/** Fetches a single product by its exact slug, or null if no product matches. */
+/** Fetches a single product by its exact slug, or null if no product matches (including a temporarily-hidden GlyMed product — see isGlyMedProduct). */
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const { data } = await wooRequest<WooCommerceProduct[]>("/products", { slug, per_page: 1 });
   const raw = asProductArray(data, "getProductBySlug")[0];
-  return raw ? mapWooProductToProduct(raw) : null;
+  if (!raw) return null;
+  const product = mapWooProductToProduct(raw);
+  return isGlyMedProduct(product) ? null : product;
 }
 
 /** Fetches every product category (33 total on this store), including parent/child relationships. */
@@ -572,7 +606,7 @@ export async function searchProducts(query: string, params: Omit<GetProductsPara
 /** Fetches WooCommerce's related products for a given product ID. */
 export async function getRelatedProducts(productId: string, limit = 4): Promise<Product[]> {
   const { data } = await wooRequest<WooCommerceProduct[]>("/products", { related: productId, per_page: limit });
-  return asProductArray(data, "getRelatedProducts").map(mapWooProductToProduct);
+  return excludeGlyMed(asProductArray(data, "getRelatedProducts").map(mapWooProductToProduct));
 }
 
 /**
@@ -594,5 +628,5 @@ export async function getProductsByIds(ids: string[]): Promise<Product[]> {
     include: cleanIds.join(","),
     per_page: cleanIds.length,
   });
-  return asProductArray(data, "getProductsByIds").map(mapWooProductToProduct);
+  return excludeGlyMed(asProductArray(data, "getProductsByIds").map(mapWooProductToProduct));
 }

@@ -65,6 +65,8 @@ export interface Product {
   /** Full WooCommerce category list, when a product belongs to more than one. */
   categories?: string[];
   tags?: string[];
+  /** WooCommerce brand taxonomy terms, when the store has brands configured. */
+  brands?: string[];
   attributes?: ProductAttribute[];
   /** Only populated for variable products — this catalogue currently has none. */
   variations?: ProductVariation[];
