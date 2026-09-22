@@ -1,10 +1,9 @@
 "use client";
 
-// Client-side cart scaffolding, backed by localStorage. There is no
-// WooCommerce cart/checkout connected yet — this exists so cart UI
-// (MiniCart, CartItem, CartSummary) has a real, working data source to
-// render against ahead of that integration. Swap these functions for
-// WooCommerce Store API cart calls once available.
+// Client-side cart, backed by localStorage. There is no WooCommerce
+// cart/checkout connected yet — this is the frontend-only cart for Phase 1
+// (see MiniCart, CartItem, CartSummary, ProductDetail). Swap these functions
+// for WooCommerce Store API cart calls once real checkout is built.
 
 import { useSyncExternalStore } from "react";
 import { getServerSnapshot, readArray, subscribe, writeArray } from "./local-store";
@@ -13,11 +12,21 @@ const STORAGE_KEY = "nagsbeauty:cart";
 
 export interface CartLine {
   productId: string;
+  /** WooCommerce variation ID, for a variable product — undefined for a simple product. Combined with productId, this is a cart line's identity, so the same product can hold one line per variation. */
+  variationId?: string;
   slug: string;
   name: string;
   image: { src: string; alt: string };
   price: number;
   quantity: number;
+  /** Selected attributes for a variable product, e.g. { Size: "50ml", Shade: "Ivory" }. */
+  attributes?: Record<string, string>;
+  /** Maximum purchasable quantity, from WooCommerce's live stock quantity — undefined when WooCommerce doesn't expose a number (i.e. the product isn't close to running low), meaning no known ceiling to enforce. */
+  stockLimit?: number;
+}
+
+function sameLine(a: Pick<CartLine, "productId" | "variationId">, b: Pick<CartLine, "productId" | "variationId">) {
+  return a.productId === b.productId && a.variationId === b.variationId;
 }
 
 function readCart(): CartLine[] {
@@ -28,26 +37,50 @@ function writeCart(lines: CartLine[]) {
   writeArray(STORAGE_KEY, lines);
 }
 
-export function addToCart(line: Omit<CartLine, "quantity">, quantity = 1) {
+export interface AddToCartResult {
+  /** Quantity actually added, after clamping to stockLimit. */
+  added: number;
+  /** True if the requested quantity was reduced to stay within stockLimit. */
+  clamped: boolean;
+}
+
+/** Adds a line to the cart, merging into an existing line for the same product+variation instead of duplicating it. Clamps to `line.stockLimit` when provided. */
+export function addToCart(line: Omit<CartLine, "quantity">, quantity = 1): AddToCartResult {
+  if (quantity < 1) return { added: 0, clamped: false };
   const current = readCart();
-  const existing = current.find((l) => l.productId === line.productId);
-  const next = existing
-    ? current.map((l) => (l.productId === line.productId ? { ...l, quantity: l.quantity + quantity } : l))
-    : [...current, { ...line, quantity }];
+  const existing = current.find((l) => sameLine(l, line));
+  const limit = line.stockLimit;
+
+  if (existing) {
+    const desired = existing.quantity + quantity;
+    const finalQuantity = limit !== undefined ? Math.min(desired, limit) : desired;
+    writeCart(current.map((l) => (sameLine(l, line) ? { ...l, ...line, quantity: finalQuantity } : l)));
+    return { added: finalQuantity - existing.quantity, clamped: finalQuantity < desired };
+  }
+
+  const finalQuantity = limit !== undefined ? Math.min(quantity, limit) : quantity;
+  writeCart([...current, { ...line, quantity: finalQuantity }]);
+  return { added: finalQuantity, clamped: finalQuantity < quantity };
+}
+
+/** Updates a line's quantity, clamped to its own stockLimit when set. A quantity of 0 or less removes the line. */
+export function updateQuantity(productId: string, quantity: number, variationId?: string) {
+  const current = readCart();
+  const next = current.flatMap((l) => {
+    if (!sameLine(l, { productId, variationId })) return [l];
+    if (quantity <= 0) return [];
+    const clamped = l.stockLimit !== undefined ? Math.min(quantity, l.stockLimit) : quantity;
+    return [{ ...l, quantity: clamped }];
+  });
   writeCart(next);
 }
 
-export function updateQuantity(productId: string, quantity: number) {
-  const current = readCart();
-  const next =
-    quantity <= 0
-      ? current.filter((l) => l.productId !== productId)
-      : current.map((l) => (l.productId === productId ? { ...l, quantity } : l));
-  writeCart(next);
+export function removeFromCart(productId: string, variationId?: string) {
+  writeCart(readCart().filter((l) => !sameLine(l, { productId, variationId })));
 }
 
-export function removeFromCart(productId: string) {
-  writeCart(readCart().filter((l) => l.productId !== productId));
+export function clearCart() {
+  writeCart([]);
 }
 
 const GST_RATE = 0.05;

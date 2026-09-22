@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Product } from "@/lib/product";
+import { addToCart } from "@/lib/cart";
+import { openMiniCart } from "@/lib/mini-cart";
 import ProductGallery from "./ProductGallery";
 import StockStatus from "./StockStatus";
 import QuantitySelector from "./QuantitySelector";
@@ -11,8 +13,39 @@ import CompareButton from "./CompareButton";
 
 export default function ProductDetail({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
+  const [addedMessage, setAddedMessage] = useState<string | null>(null);
   const outOfStock = product.stockStatus === "out-of-stock";
+  // Variable products need an attribute/variation selector this store's
+  // catalogue currently has none of (see lib/woocommerce.ts) — until real
+  // variation data exists to build one against, purchasing stays routed to
+  // a phone call instead of guessing at options.
   const needsOptions = Boolean(product.hasOptions) && (!product.variations || product.variations.length === 0);
+  const canAddToCart = product.type === "simple" && !outOfStock && product.hasValidPrice && !needsOptions;
+  const stockLimit = product.stockQuantity;
+
+  function handleAddToCart() {
+    if (!canAddToCart) return;
+    const result = addToCart(
+      {
+        productId: product.id,
+        slug: product.slug,
+        name: product.name,
+        image: { src: product.image.src, alt: product.image.alt },
+        price: Number.parseFloat((product.salePrice ?? product.price).replace(/[^0-9.]/g, "")) || 0,
+        stockLimit,
+      },
+      quantity
+    );
+    setAddedMessage(
+      result.added > 0
+        ? result.clamped
+          ? `Added ${result.added} × ${product.name} to your cart (limited by available stock).`
+          : `Added ${result.added} × ${product.name} to your cart.`
+        : `${product.name} is already at the maximum available quantity in your cart.`
+    );
+    openMiniCart();
+    setQuantity(1);
+  }
 
   return (
     <div className="grid gap-10 md:grid-cols-2">
@@ -79,33 +112,49 @@ export default function ProductDetail({ product }: { product: Product }) {
         )}
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <QuantitySelector value={quantity} onChange={setQuantity} disabled={outOfStock || !product.hasValidPrice} />
+          <QuantitySelector value={quantity} onChange={setQuantity} max={stockLimit} disabled={!canAddToCart} />
           <button
             type="button"
-            disabled
-            aria-disabled="true"
+            onClick={canAddToCart ? handleAddToCart : undefined}
+            disabled={!canAddToCart}
+            aria-disabled={!canAddToCart}
             title={
-              product.hasValidPrice
-                ? "Online cart and checkout are coming soon"
-                : "This product's price needs to be confirmed before it can be ordered — please contact us"
+              outOfStock
+                ? "This product is currently out of stock"
+                : !product.hasValidPrice
+                  ? "This product's price needs to be confirmed before it can be ordered — please contact us"
+                  : needsOptions
+                    ? "This product has selectable options — please call to order"
+                    : undefined
             }
-            className="cursor-not-allowed rounded-md bg-ink/10 px-6 py-3 text-sm font-semibold text-ink/40"
+            className={
+              canAddToCart
+                ? "rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light"
+                : "cursor-not-allowed rounded-md bg-ink/10 px-6 py-3 text-sm font-semibold text-ink/40"
+            }
           >
-            {product.hasValidPrice ? "Add to Cart — Coming Soon" : "Contact for Price"}
+            {outOfStock ? "Out of Stock" : !product.hasValidPrice ? "Contact for Price" : "Add to Cart"}
           </button>
           <WishlistButton productId={product.id} />
           <CompareButton productId={product.id} />
         </div>
+
+        {addedMessage && (
+          <p role="status" aria-live="polite" className="mt-3 rounded-md border border-gold/40 bg-gold/10 px-4 py-2 text-sm text-ink">
+            {addedMessage}
+          </p>
+        )}
+
         <p className="mt-2 text-xs text-ink/50">
-          {product.hasValidPrice ? (
+          {canAddToCart ? (
             <>
-              Online cart and checkout integration is not live yet. To order, call{" "}
+              Online checkout is being finalized. To complete an order now, call{" "}
               <a href="tel:+17782787727" className="text-gold-dark hover:underline">
                 (778) 278-7727
               </a>{" "}
               or visit our Langley storefront.
             </>
-          ) : (
+          ) : !product.hasValidPrice ? (
             <>
               This product&rsquo;s price hasn&rsquo;t been set yet. Please call{" "}
               <a href="tel:+17782787727" className="text-gold-dark hover:underline">
@@ -113,7 +162,15 @@ export default function ProductDetail({ product }: { product: Product }) {
               </a>{" "}
               to confirm pricing and availability.
             </>
-          )}
+          ) : outOfStock ? (
+            <>
+              This product is currently out of stock. Please call{" "}
+              <a href="tel:+17782787727" className="text-gold-dark hover:underline">
+                (778) 278-7727
+              </a>{" "}
+              to ask about availability.
+            </>
+          ) : null}
         </p>
 
         {product.tags && product.tags.length > 0 && (

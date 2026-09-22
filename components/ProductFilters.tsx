@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ProductCategoryData } from "@/lib/product";
 
-const stockOptions: { value: "in-stock" | "backorder"; label: string }[] = [
-  { value: "in-stock", label: "In Stock" },
-  { value: "backorder", label: "Available on Backorder" },
-];
+// "Available on Backorder" is intentionally not offered as a filter here —
+// the client hasn't yet confirmed backorders are allowed to be sold, so this
+// stays hidden from shoppers until that's settled (see lib/woocommerce.ts's
+// resolveStockStatus, which still understands the value defensively).
+const stockOptions: { value: "in-stock"; label: string }[] = [{ value: "in-stock", label: "In Stock" }];
 
 /**
  * Category + availability sidebar for WooCommerce product listings. Reads/

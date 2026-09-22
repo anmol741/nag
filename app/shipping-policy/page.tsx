@@ -8,14 +8,21 @@ export const metadata: Metadata = {
 
 const EFFECTIVE_DATE = "September 2026";
 
-// Content sourced verbatim from docs/Nags-Beauty-Website-Policies.pdf ("Shipping Policy" section).
+// Content sourced from docs/Nags-Beauty-Website-Policies.pdf ("Shipping
+// Policy" section), updated with the client's confirmed shipping details
+// (Canada-only scope, 3–5 business day processing, and local pickup hours
+// and address). No shipping rate or carrier is named — neither has been
+// confirmed yet — and this page's own address here is the confirmed pickup
+// location only; the shared `policyContact` block below (used by all five
+// policy pages) is untouched, so this doesn't affect Privacy, Terms, Return
+// & Refund, or the Training Course Policy.
 const sections: PolicySection[] = [
   {
     heading: "1. Shipping Area",
     body: (
       <p>
-        We currently ship within Canada only. International shipping is not currently available
-        through our website.
+        Shipping is available within Canada only. International and USA shipping are not
+        available.
       </p>
     ),
   },
@@ -23,9 +30,9 @@ const sections: PolicySection[] = [
     heading: "2. Order Processing",
     body: (
       <p>
-        Orders are processed after payment has been successfully received or authorized.
-        Processing times may vary depending on product availability, order volume, weekends,
-        statutory holidays, and other circumstances.
+        Orders are processed after payment has been successfully received or authorized. Normal
+        processing time is 3–5 business days, though this may vary depending on product
+        availability, order volume, weekends, statutory holidays, and other circumstances.
       </p>
     ),
   },
@@ -39,7 +46,25 @@ const sections: PolicySection[] = [
     ),
   },
   {
-    heading: "4. Delivery Times",
+    heading: "4. Local Pickup",
+    body: (
+      <>
+        <p>Local pickup is available at our Langley storefront during pickup hours:</p>
+        <p>Monday–Friday, 10:00 AM–4:30 PM</p>
+        <p>
+          Unit 102
+          <br />
+          19623 56 Avenue
+          <br />
+          Langley, BC V3A 3X7
+          <br />
+          Canada
+        </p>
+      </>
+    ),
+  },
+  {
+    heading: "5. Delivery Times",
     body: (
       <p>
         Any delivery dates or timeframes provided are estimates only and are not guaranteed.
@@ -49,7 +74,7 @@ const sections: PolicySection[] = [
     ),
   },
   {
-    heading: "5. Shipping Address",
+    heading: "6. Shipping Address",
     body: (
       <p>
         Customers are responsible for providing a complete and accurate shipping address. Please
@@ -62,7 +87,7 @@ const sections: PolicySection[] = [
     ),
   },
   {
-    heading: "6. Tracking",
+    heading: "7. Tracking",
     body: (
       <p>
         Where tracking is available, tracking information may be provided after your order has
@@ -72,7 +97,7 @@ const sections: PolicySection[] = [
     ),
   },
   {
-    heading: "7. Delayed or Missing Packages",
+    heading: "8. Delayed or Missing Packages",
     body: (
       <p>
         After an order has been transferred to the shipping carrier, circumstances outside our
@@ -83,7 +108,7 @@ const sections: PolicySection[] = [
     ),
   },
   {
-    heading: "8. Damaged Orders",
+    heading: "9. Damaged Orders",
     body: (
       <p>
         If your order arrives damaged, please contact us promptly. Please retain the product,

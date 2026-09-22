@@ -51,28 +51,37 @@ export default function MiniCart({ open, onClose }: { open: boolean; onClose: ()
           ) : (
             <ul className="divide-y divide-ink/10">
               {lines.map((line) => (
-                <li key={line.productId} className="flex gap-3 py-4">
+                <li key={`${line.productId}-${line.variationId ?? "simple"}`} className="flex gap-3 py-4">
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-ink/10 bg-cream">
                     <Image src={line.image.src} alt={line.image.alt} fill sizes="64px" className="object-cover" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{line.name}</p>
+                    {line.attributes && Object.keys(line.attributes).length > 0 && (
+                      <p className="text-xs text-ink/50">
+                        {Object.entries(line.attributes)
+                          .map(([name, value]) => `${name}: ${value}`)
+                          .join(", ")}
+                      </p>
+                    )}
                     <div className="mt-1 flex items-center justify-between text-xs text-ink/60">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          aria-label="Decrease quantity"
-                          onClick={() => updateQuantity(line.productId, line.quantity - 1)}
-                          className="px-1.5"
+                          aria-label={`Decrease quantity of ${line.name}`}
+                          disabled={line.quantity <= 1}
+                          onClick={() => updateQuantity(line.productId, line.quantity - 1, line.variationId)}
+                          className="px-1.5 disabled:opacity-30"
                         >
                           −
                         </button>
-                        <span>{line.quantity}</span>
+                        <span aria-live="polite">{line.quantity}</span>
                         <button
                           type="button"
-                          aria-label="Increase quantity"
-                          onClick={() => updateQuantity(line.productId, line.quantity + 1)}
-                          className="px-1.5"
+                          aria-label={`Increase quantity of ${line.name}`}
+                          disabled={line.stockLimit !== undefined && line.quantity >= line.stockLimit}
+                          onClick={() => updateQuantity(line.productId, line.quantity + 1, line.variationId)}
+                          className="px-1.5 disabled:opacity-30"
                         >
                           +
                         </button>
@@ -81,7 +90,8 @@ export default function MiniCart({ open, onClose }: { open: boolean; onClose: ()
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeFromCart(line.productId)}
+                      aria-label={`Remove ${line.name} from cart`}
+                      onClick={() => removeFromCart(line.productId, line.variationId)}
                       className="mt-1 text-xs text-ink/40 underline-offset-2 hover:text-red-600 hover:underline"
                     >
                       Remove

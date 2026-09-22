@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { business, courseCategories } from "@/lib/site-config";
 import { useCart } from "@/lib/cart";
+import { closeMiniCart, openMiniCart, useMiniCartOpen } from "@/lib/mini-cart";
 import { useStoredIds } from "@/lib/local-store";
 import { WISHLIST_STORAGE_KEY } from "./WishlistButton";
 import MiniCart from "./MiniCart";
@@ -38,7 +39,7 @@ function useCloseOnOutsideOrEscape(
 export default function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
+  const cartOpen = useMiniCartOpen();
   const { lines: cartLines } = useCart();
   const cartCount = cartLines.reduce((sum, l) => sum + l.quantity, 0);
   const wishlistCount = useStoredIds(WISHLIST_STORAGE_KEY).length;
@@ -239,7 +240,7 @@ export default function Header() {
           <button
             type="button"
             aria-label={`Cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
-            onClick={() => setCartOpen(true)}
+            onClick={openMiniCart}
             className="relative shrink-0 hover:text-gold-light"
           >
             <BagIcon className="h-5 w-5" />
@@ -334,7 +335,7 @@ export default function Header() {
                 className="text-sm hover:text-gold-light"
                 onClick={() => {
                   setMobileOpen(false);
-                  setCartOpen(true);
+                  openMiniCart();
                 }}
               >
                 Cart{cartCount > 0 ? ` (${cartCount})` : ""}
@@ -348,7 +349,7 @@ export default function Header() {
         </div>
       )}
 
-      <MiniCart open={cartOpen} onClose={() => setCartOpen(false)} />
+      <MiniCart open={cartOpen} onClose={closeMiniCart} />
     </header>
   );
 }

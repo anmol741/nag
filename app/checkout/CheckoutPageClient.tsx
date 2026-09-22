@@ -68,6 +68,14 @@ export default function CheckoutPageClient() {
       <div className="mx-auto max-w-5xl px-6">
         <h1 className="font-display text-3xl text-ink">Checkout</h1>
 
+        <p className="mt-4 rounded-md border border-gold/40 bg-cream p-4 text-sm text-ink/80">
+          Online checkout setup is being completed. Your cart has been saved. Please contact us at{" "}
+          <a href="tel:+17782787727" className="text-gold-dark hover:underline">
+            (778) 278-7727
+          </a>{" "}
+          if you need assistance placing an order.
+        </p>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
