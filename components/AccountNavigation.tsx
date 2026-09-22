@@ -12,8 +12,6 @@ const links = [
   { label: "Wishlist", href: "/wishlist" },
 ];
 
-
-
 // Only ever rendered inside RequireAccountSession's authenticated branch,
 // so a logged-out visitor never sees this nav or the Log Out action.
 export default function AccountNavigation() {
