@@ -1,48 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
+import { CANADIAN_PROVINCES } from "@/lib/canadian-provinces";
+import { isValidCanadianPhone, isValidCanadianPostalCode } from "@/lib/validation";
 import CheckoutSummary from "@/components/CheckoutSummary";
 import EmptyState from "@/components/EmptyState";
 import { ClipboardIcon } from "@/components/icons";
 
-// This store ships within Canada only (confirmed by the client — see
-// shipping-policy). The country field below is locked to Canada rather than
-// a free-text input so a non-Canadian address can't be entered at all; this
-// list backs the province selector.
-const CANADIAN_PROVINCES = [
-  { code: "AB", name: "Alberta" },
-  { code: "BC", name: "British Columbia" },
-  { code: "MB", name: "Manitoba" },
-  { code: "NB", name: "New Brunswick" },
-  { code: "NL", name: "Newfoundland and Labrador" },
-  { code: "NS", name: "Nova Scotia" },
-  { code: "NT", name: "Northwest Territories" },
-  { code: "NU", name: "Nunavut" },
-  { code: "ON", name: "Ontario" },
-  { code: "PE", name: "Prince Edward Island" },
-  { code: "QC", name: "Quebec" },
-  { code: "SK", name: "Saskatchewan" },
-  { code: "YT", name: "Yukon" },
-] as const;
-
-/** Defensive re-check behind the locked country selects above — rejects a shipping address whose country value isn't Canada, e.g. if the DOM were tampered with. */
-function validateCanadaOnly(formData: FormData, shipToDifferentAddress: boolean): string | null {
-  const prefixes = shipToDifferentAddress ? ["billing", "shipping"] : ["billing"];
-  for (const prefix of prefixes) {
-    const country = formData.get(`${prefix}-country`);
-    if (country !== "CA") {
-      return "We're only able to ship within Canada right now. Please provide a Canadian shipping address.";
-    }
-  }
-  return null;
+// Deliberately decoupled from lib/server/woocommerce-admin.ts's
+// CustomerProfile type — that module is server-only, and this is a client
+// component, so this shape is just the handful of fields checkout actually
+// prefills from, not the full server type.
+export interface CheckoutProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  salonName?: string;
+  certification?: string;
+  billing: {
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    phone?: string;
+  };
 }
 
-export default function CheckoutPageClient() {
+interface AddressFormValues {
+  fullName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  province: string;
+  postalCode: string;
+}
+
+const emptyAddress: AddressFormValues = { fullName: "", addressLine1: "", addressLine2: "", city: "", province: "", postalCode: "" };
+
+function profileToAddress(profile: CheckoutProfile | null): AddressFormValues {
+  if (!profile) return emptyAddress;
+  return {
+    fullName: `${profile.firstName} ${profile.lastName}`.trim(),
+    addressLine1: profile.billing.addressLine1,
+    addressLine2: profile.billing.addressLine2 ?? "",
+    city: profile.billing.city,
+    province: profile.billing.province,
+    postalCode: profile.billing.postalCode,
+  };
+}
+
+/**
+ * Checkout requires a logged-in account (guest checkout is not offered —
+ * see the Phase 2 report). Whether to redirect a logged-out visitor can
+ * only be decided once the cart is known, and the cart only exists
+ * client-side (localStorage), so this decision can't live in proxy.ts —
+ * it's made here, after mount, once useCart() has actually read it. An
+ * empty cart still shows the ordinary empty-cart state either way, logged
+ * in or not.
+ */
+export default function CheckoutPageClient({ loggedIn, profile }: { loggedIn: boolean; profile: CheckoutProfile | null }) {
+  const router = useRouter();
   const { lines, subtotal, gst, pst, total } = useCart();
   const [shipToDifferentAddress, setShipToDifferentAddress] = useState(false);
-  const [addressError, setAddressError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const [billing, setBilling] = useState<AddressFormValues>(() => profileToAddress(profile));
+  const [shipping, setShipping] = useState<AddressFormValues>(emptyAddress);
+  const [phone, setPhone] = useState(profile?.billing.phone ?? "");
+  const [salonName, setSalonName] = useState(profile?.salonName ?? "");
+  const [certification, setCertification] = useState(profile?.certification ?? "");
+
+  useEffect(() => {
+    if (lines.length > 0 && !loggedIn) {
+      router.push("/account?returnTo=/checkout");
+    }
+  }, [lines.length, loggedIn, router]);
 
   if (lines.length === 0) {
     return (
@@ -63,6 +99,35 @@ export default function CheckoutPageClient() {
     );
   }
 
+  if (!loggedIn) {
+    // The redirect effect above is already firing — this avoids briefly
+    // flashing the full checkout form before it takes effect.
+    return (
+      <section className="bg-white py-24">
+        <div className="mx-auto max-w-md px-6 text-center">
+          <p className="text-ink/60">Please log in to continue to checkout — redirecting…</p>
+        </div>
+      </section>
+    );
+  }
+
+  function validate(): string | null {
+    if (!phone || !isValidCanadianPhone(phone)) return "Enter a valid Canadian phone number.";
+    if (!salonName.trim()) return "Salon/spa name is required.";
+    if (!certification.trim()) return "Certification is required.";
+    for (const [label, address] of [
+      ["Billing", billing],
+      ...(shipToDifferentAddress ? [["Shipping", shipping] as const] : []),
+    ] as const) {
+      if (!address.fullName.trim()) return `${label} full name is required.`;
+      if (!address.addressLine1.trim()) return `${label} address line 1 is required.`;
+      if (!address.city.trim()) return `${label} city is required.`;
+      if (!address.province) return `${label} province is required.`;
+      if (!isValidCanadianPostalCode(address.postalCode)) return `${label} postal code isn't a valid Canadian postal code.`;
+    }
+    return null;
+  }
+
   return (
     <section className="bg-white py-16">
       <div className="mx-auto max-w-5xl px-6">
@@ -79,15 +144,37 @@ export default function CheckoutPageClient() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            setAddressError(validateCanadaOnly(new FormData(e.currentTarget), shipToDifferentAddress));
+            setFormError(validate());
           }}
           className="mt-8 grid gap-10 md:grid-cols-[1fr_360px]"
         >
           <div className="space-y-10">
             <fieldset>
+              <legend className="font-display text-xl text-ink">Contact &amp; Professional Details</legend>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="checkout-email" className="block text-sm font-medium text-ink">
+                    Email
+                  </label>
+                  <input
+                    id="checkout-email"
+                    type="email"
+                    value={profile?.email ?? ""}
+                    readOnly
+                    disabled
+                    className="mt-1 w-full cursor-not-allowed rounded-md border border-ink/15 bg-cream px-3 py-2 text-sm text-ink/60 outline-none"
+                  />
+                </div>
+                <TextField id="checkout-phone" label="Phone" value={phone} onChange={setPhone} />
+                <TextField id="checkout-salon" label="Salon/Spa Name" value={salonName} onChange={setSalonName} />
+                <TextField id="checkout-certification" label="Certification" value={certification} onChange={setCertification} />
+              </div>
+            </fieldset>
+
+            <fieldset>
               <legend className="font-display text-xl text-ink">Billing Address</legend>
               <p className="mt-1 text-xs text-ink/50">We currently ship within Canada only.</p>
-              <AddressFields prefix="billing" />
+              <AddressFields prefix="billing" values={billing} onChange={setBilling} />
             </fieldset>
 
             <fieldset>
@@ -105,14 +192,14 @@ export default function CheckoutPageClient() {
                 <div className="mt-4">
                   <h3 className="font-display text-xl text-ink">Shipping Address</h3>
                   <p className="mt-1 text-xs text-ink/50">We currently ship within Canada only.</p>
-                  <AddressFields prefix="shipping" />
+                  <AddressFields prefix="shipping" values={shipping} onChange={setShipping} />
                 </div>
               )}
             </fieldset>
 
-            {addressError && (
+            {formError && (
               <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {addressError}
+                {formError}
               </p>
             )}
 
@@ -167,81 +254,80 @@ export default function CheckoutPageClient() {
   );
 }
 
-function AddressFields({ prefix }: { prefix: string }) {
-  return (
-    <div className="mt-4 grid gap-4 sm:grid-cols-2">
-      <Field prefix={prefix} name="first-name" label="First Name" />
-      <Field prefix={prefix} name="last-name" label="Last Name" />
-      <Field prefix={prefix} name="address" label="Street Address" full />
-      <Field prefix={prefix} name="city" label="City" />
-      <ProvinceField prefix={prefix} />
-      <Field prefix={prefix} name="postal-code" label="Postal Code" />
-      <CountryField prefix={prefix} />
-    </div>
-  );
-}
-
-/** Locked to Canada — this store ships within Canada only, so there's nothing else to select. */
-function CountryField({ prefix }: { prefix: string }) {
-  const id = `${prefix}-country`;
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
-        Country
-      </label>
-      <select
-        id={id}
-        name={id}
-        value="CA"
-        onChange={() => {}}
-        aria-readonly
-        className="mt-1 w-full cursor-default rounded-md border border-ink/15 bg-cream px-3 py-2 text-sm text-ink outline-none"
-      >
-        <option value="CA">Canada</option>
-      </select>
-    </div>
-  );
-}
-
-function ProvinceField({ prefix }: { prefix: string }) {
-  const id = `${prefix}-province`;
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
-        Province
-      </label>
-      <select
-        id={id}
-        name={id}
-        required
-        defaultValue=""
-        className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
-      >
-        <option value="" disabled>
-          Select a province
-        </option>
-        {CANADIAN_PROVINCES.map((province) => (
-          <option key={province.code} value={province.code}>
-            {province.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function Field({
+function AddressFields({
   prefix,
-  name,
-  label,
-  full = false,
+  values,
+  onChange,
 }: {
   prefix: string;
-  name: string;
-  label: string;
-  full?: boolean;
+  values: AddressFormValues;
+  onChange: (values: AddressFormValues) => void;
 }) {
-  const id = `${prefix}-${name}`;
+  function set<K extends keyof AddressFormValues>(key: K, value: AddressFormValues[K]) {
+    onChange({ ...values, [key]: value });
+  }
+
+  return (
+    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <TextField id={`${prefix}-full-name`} label="Full Name" full value={values.fullName} onChange={(v) => set("fullName", v)} />
+      <TextField id={`${prefix}-address-1`} label="Address Line 1" full value={values.addressLine1} onChange={(v) => set("addressLine1", v)} />
+      <TextField id={`${prefix}-address-2`} label="Address Line 2 (optional)" full value={values.addressLine2} onChange={(v) => set("addressLine2", v)} />
+      <TextField id={`${prefix}-city`} label="City" value={values.city} onChange={(v) => set("city", v)} />
+      <div>
+        <label htmlFor={`${prefix}-province`} className="block text-sm font-medium text-ink">
+          Province
+        </label>
+        <select
+          id={`${prefix}-province`}
+          required
+          value={values.province}
+          onChange={(e) => set("province", e.target.value)}
+          className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
+        >
+          <option value="" disabled>
+            Select a province
+          </option>
+          {CANADIAN_PROVINCES.map((p) => (
+            <option key={p.code} value={p.code}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <TextField id={`${prefix}-postal-code`} label="Postal Code" value={values.postalCode} onChange={(v) => set("postalCode", v)} placeholder="A1A 1A1" />
+      <div>
+        <label htmlFor={`${prefix}-country`} className="block text-sm font-medium text-ink">
+          Country
+        </label>
+        <select
+          id={`${prefix}-country`}
+          value="CA"
+          onChange={() => {}}
+          aria-readonly
+          className="mt-1 w-full cursor-default rounded-md border border-ink/15 bg-cream px-3 py-2 text-sm text-ink outline-none"
+        >
+          <option value="CA">Canada</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function TextField({
+  id,
+  label,
+  value,
+  onChange,
+  full = false,
+  placeholder,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  full?: boolean;
+  placeholder?: string;
+}) {
   return (
     <div className={full ? "sm:col-span-2" : ""}>
       <label htmlFor={id} className="block text-sm font-medium text-ink">
@@ -249,8 +335,10 @@ function Field({
       </label>
       <input
         id={id}
-        name={id}
         type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full rounded-md border border-ink/15 px-3 py-2 text-sm outline-none focus:border-gold"
       />
     </div>

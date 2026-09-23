@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { logout } from "@/lib/auth";
 
 const links = [
   { label: "Account Overview", href: "/account" },
@@ -12,15 +11,22 @@ const links = [
   { label: "Wishlist", href: "/wishlist" },
 ];
 
-// Only ever rendered inside RequireAccountSession's authenticated branch,
-// so a logged-out visitor never sees this nav or the Log Out action.
+// Only ever rendered on an authenticated account page, so a logged-out
+// visitor never sees this nav or the Log Out action.
 export default function AccountNavigation() {
   const pathname = usePathname();
   const router = useRouter();
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Best-effort — the session cookie is short-lived regardless, and
+      // router.refresh() below re-reads the real (now server-verified)
+      // session state either way.
+    }
     router.push("/account");
+    router.refresh();
   }
 
   return (

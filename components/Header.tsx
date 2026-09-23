@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { business, courseCategories } from "@/lib/site-config";
 import { useCart } from "@/lib/cart";
@@ -36,13 +36,58 @@ function useCloseOnOutsideOrEscape(
   }, [active, onClose, containerRef]);
 }
 
+/**
+ * Most pages under the root layout are statically generated and can be
+ * served from a CDN cache to many different visitors, so the session
+ * can't be resolved server-side in the layout and baked into that shared
+ * HTML — see app/layout.tsx's comment. Instead, `loggedIn` starts `false`
+ * (matching both the server-rendered HTML and the client's very first
+ * render, so there's no hydration mismatch) and is corrected right after
+ * mount via GET /api/auth/session, which returns only a boolean — no
+ * email, no customer ID ever reaches this component or any other client
+ * code. This trades a brief post-mount flash on a first page load for
+ * keeping the rest of the site's static-generation performance intact.
+ */
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const cartOpen = useMiniCartOpen();
   const { lines: cartLines } = useCart();
   const cartCount = cartLines.reduce((sum, l) => sum + l.quantity, 0);
   const wishlistCount = useStoredIds(WISHLIST_STORAGE_KEY).length;
+
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  useCloseOnOutsideOrEscape(accountOpen, () => setAccountOpen(false), accountRef);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { loggedIn?: boolean } | null) => {
+        if (!cancelled && data) setLoggedIn(Boolean(data.loggedIn));
+      })
+      .catch(() => {
+        // Leave loggedIn at its false default — same as a logged-out visitor.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleLogout() {
+    setAccountOpen(false);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Best-effort — the cookie is HttpOnly and short-lived regardless.
+    }
+    setLoggedIn(false);
+    router.push("/account");
+    router.refresh();
+  }
 
   const [coursesOpen, setCoursesOpen] = useState(false);
   const coursesRef = useRef<HTMLDivElement>(null);
@@ -222,9 +267,60 @@ export default function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-          <Link href="/account" aria-label="Account" className="hidden lg:block hover:text-gold-light">
-            <UserIcon className="h-5 w-5" />
-          </Link>
+          {loggedIn ? (
+            <div className="relative hidden lg:block" ref={accountRef}>
+              <button
+                type="button"
+                aria-label="Account menu"
+                aria-expanded={accountOpen}
+                aria-controls="account-dropdown"
+                onClick={() => setAccountOpen((v) => !v)}
+                className="hover:text-gold-light"
+              >
+                <UserIcon className="h-5 w-5" />
+              </button>
+              {accountOpen && (
+                <div id="account-dropdown" className="absolute right-0 top-full w-56 pt-3">
+                  <div className="rounded-lg border border-white/10 bg-ink-soft p-2 shadow-xl">
+                    <Link
+                      href="/account"
+                      className="block rounded-md px-3 py-2 text-sm text-white/85 hover:bg-white/5 hover:text-gold-light"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      My Account
+                    </Link>
+                    <Link
+                      href="/account/orders"
+                      className="block rounded-md px-3 py-2 text-sm text-white/85 hover:bg-white/5 hover:text-gold-light"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      Orders
+                    </Link>
+                    <Link
+                      href="/account/addresses"
+                      className="block rounded-md px-3 py-2 text-sm text-white/85 hover:bg-white/5 hover:text-gold-light"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      Addresses
+                    </Link>
+                    <div className="mt-1 border-t border-white/10 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-gold-light hover:bg-white/5"
+                      >
+                        Log Out
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/account" aria-label="Account — log in" className="hidden lg:block hover:text-gold-light">
+              <UserIcon className="h-5 w-5" />
+            </Link>
+          )}
           <Link
             href="/wishlist"
             aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} item${wishlistCount === 1 ? "" : "s"}` : ""}`}
@@ -325,8 +421,25 @@ export default function Header() {
             </Link>
             <div className="mt-2 flex flex-wrap items-center gap-4 border-t border-white/10 pt-3">
               <Link href="/account" className="text-sm hover:text-gold-light" onClick={() => setMobileOpen(false)}>
-                Account
+                {loggedIn ? "My Account" : "Account"}
               </Link>
+              {loggedIn && (
+                <>
+                  <Link href="/account/orders" className="text-sm hover:text-gold-light" onClick={() => setMobileOpen(false)}>
+                    Orders
+                  </Link>
+                  <button
+                    type="button"
+                    className="text-sm hover:text-gold-light"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    Log Out
+                  </button>
+                </>
+              )}
               <Link href="/wishlist" className="text-sm hover:text-gold-light" onClick={() => setMobileOpen(false)}>
                 Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
               </Link>

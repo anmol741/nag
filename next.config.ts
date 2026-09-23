@@ -22,8 +22,8 @@ const nextConfig: NextConfig = {
         destination: "/newsletter",
         permanent: true,
       },
-      // /account is the single customer login/registration entry point —
-      // these two standalone pages were redundant with it.
+      // /account shows login (or the dashboard, if already signed in);
+      // /account/register is the dedicated registration page (Phase 2).
       {
         source: "/login",
         destination: "/account",
@@ -31,8 +31,27 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/register",
-        destination: "/account",
+        destination: "/account/register",
         permanent: true,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        // Baseline hardening headers, site-wide. No CSP here — this store
+        // embeds several third-party scripts/fonts (Google Fonts, Elementor
+        // widgets, etc. on the live WordPress site, and this frontend adds
+        // its own) and getting a CSP right without breaking one of them
+        // needs a dedicated pass this phase didn't scope; see the Phase 2
+        // report.
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
       },
     ];
   },
