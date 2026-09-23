@@ -82,6 +82,7 @@ export interface Product {
   /** Sanitized HTML full description, safe to render with dangerouslySetInnerHTML. */
   descriptionHtml?: string;
   stockStatus: StockStatus;
+  /** Real maximum purchasable quantity, from WooCommerce's own add_to_cart.maximum — undefined when WooCommerce reports no meaningful cap (not stock-quantity-managed), never an invented number. This is the ceiling the cart must enforce. */
   stockQuantity?: number;
   /** WooCommerce's human-readable stock line, e.g. "Only 3 left in stock". */
   stockMessage?: string;

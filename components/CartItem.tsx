@@ -47,7 +47,10 @@ export default function CartItem({ line }: { line: CartLine }) {
           </button>
         </div>
         {line.stockLimit !== undefined && line.quantity >= line.stockLimit && (
-          <p className="mt-1 text-xs text-gold-dark">Only {line.stockLimit} in stock.</p>
+          <p role="status" aria-live="polite" className="mt-1 text-xs text-gold-dark">
+            Only {line.stockLimit} unit{line.stockLimit === 1 ? "" : "s"} of {line.name} {line.stockLimit === 1 ? "is" : "are"} currently
+            available.
+          </p>
         )}
       </div>
     </div>

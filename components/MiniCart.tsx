@@ -3,13 +3,21 @@
 import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart, updateQuantity, removeFromCart } from "@/lib/cart";
+import { useCart, useValidateCartStock, updateQuantity, removeFromCart } from "@/lib/cart";
 import { BagIcon, CloseIcon } from "./icons";
 
 const currency = new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" });
 
+/**
+ * MiniCart is mounted unconditionally by Header on every page (it just
+ * renders null while closed), which makes it the natural place to run the
+ * cart's live stock revalidation once per page load — see
+ * useValidateCartStock in lib/cart.ts for why this can't be done from a
+ * stored stockLimit alone.
+ */
 export default function MiniCart({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { lines, subtotal } = useCart();
+  useValidateCartStock();
   const panelRef = useRef<HTMLDivElement>(null);
 
   if (!open) return null;
@@ -96,6 +104,11 @@ export default function MiniCart({ open, onClose }: { open: boolean; onClose: ()
                     >
                       Remove
                     </button>
+                    {line.stockLimit !== undefined && line.quantity >= line.stockLimit && (
+                      <p role="status" aria-live="polite" className="mt-1 text-xs text-gold-dark">
+                        Only {line.stockLimit} unit{line.stockLimit === 1 ? "" : "s"} available.
+                      </p>
+                    )}
                   </div>
                 </li>
               ))}

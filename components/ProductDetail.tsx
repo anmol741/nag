@@ -20,8 +20,11 @@ export default function ProductDetail({ product }: { product: Product }) {
   // variation data exists to build one against, purchasing stays routed to
   // a phone call instead of guessing at options.
   const needsOptions = Boolean(product.hasOptions) && (!product.variations || product.variations.length === 0);
-  const canAddToCart = product.type === "simple" && !outOfStock && product.hasValidPrice && !needsOptions;
   const stockLimit = product.stockQuantity;
+  // stockLimit === 0 is a real, known "none available" — distinct from
+  // undefined ("WooCommerce reports no ceiling") — and must block adding
+  // even if stockStatus itself hasn't caught up to say "out of stock".
+  const canAddToCart = product.type === "simple" && !outOfStock && product.hasValidPrice && !needsOptions && stockLimit !== 0;
 
   function handleAddToCart() {
     if (!canAddToCart) return;
@@ -36,12 +39,14 @@ export default function ProductDetail({ product }: { product: Product }) {
       },
       quantity
     );
+    const availabilityNote =
+      stockLimit !== undefined ? ` Only ${stockLimit} unit${stockLimit === 1 ? " is" : "s are"} currently available.` : "";
     setAddedMessage(
       result.added > 0
         ? result.clamped
-          ? `Added ${result.added} × ${product.name} to your cart (limited by available stock).`
+          ? `Added ${result.added} × ${product.name} to your cart.${availabilityNote}`
           : `Added ${result.added} × ${product.name} to your cart.`
-        : `${product.name} is already at the maximum available quantity in your cart.`
+        : `${product.name} is already at its maximum quantity in your cart.${availabilityNote}`
     );
     openMiniCart();
     setQuantity(1);

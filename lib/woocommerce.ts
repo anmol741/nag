@@ -97,6 +97,20 @@ export interface StockAvailability {
   class: string;
 }
 
+/**
+ * WooCommerce's own computed add-to-cart quantity constraints — the same
+ * numbers its own Add to Cart button enforces. `maximum` is the field to
+ * trust for a stock ceiling: confirmed against the live store, it equals
+ * the real remaining quantity for a stock-managed product (e.g. 10, 2) and
+ * reports 9999 — WooCommerce's "no meaningful cap" sentinel — for a
+ * product that isn't stock-quantity-managed. See resolveStockQuantity().
+ */
+export interface WooCommerceAddToCart {
+  minimum: number;
+  maximum: number;
+  multiple_of: number;
+}
+
 export interface WooCommerceProduct {
   id: number;
   name: string;
@@ -126,6 +140,7 @@ export interface WooCommerceProduct {
   low_stock_remaining: number | null;
   stock_availability: StockAvailability;
   sold_individually: boolean;
+  add_to_cart?: WooCommerceAddToCart;
 }
 
 export interface WooCommerceCategory {
@@ -208,6 +223,39 @@ function mapStockStatus(raw: Pick<WooCommerceProduct, "is_in_stock" | "is_on_bac
   if (!raw.is_in_stock && raw.is_on_backorder) return "backorder";
   if (!raw.is_in_stock) return "out-of-stock";
   return "in-stock";
+}
+
+/**
+ * WooCommerce reports 9999 in `add_to_cart.maximum` for a product with no
+ * real ceiling to enforce (not stock-quantity-managed) — confirmed against
+ * the live store's own unmanaged-stock products. Treated as "no known
+ * limit", never as a real cap of 9999.
+ */
+const UNLIMITED_ADD_TO_CART_MAX = 9999;
+
+/**
+ * The real maximum purchasable quantity for a product, when WooCommerce
+ * knows one. `add_to_cart.maximum` is WooCommerce's own computed ceiling —
+ * the same number its own Add to Cart button enforces, already accounting
+ * for manage_stock, the configured low-stock threshold, and backorder
+ * rules — so it's used directly rather than re-deriving a limit from
+ * `low_stock_remaining` (which is null for most in-stock products; it's
+ * only populated once stock drops to the low-stock threshold — verified
+ * against the live store, e.g. a product with 10 in stock reports
+ * low_stock_remaining: null but add_to_cart.maximum: 10). Returns
+ * undefined — never an invented number — whenever WooCommerce itself
+ * reports no meaningful cap, so an unmanaged-stock product stays
+ * uncapped exactly as WooCommerce intends.
+ */
+function resolveStockQuantity(raw: WooCommerceProduct): number | undefined {
+  const max = raw.add_to_cart?.maximum;
+  if (typeof max === "number" && Number.isFinite(max) && max >= 0 && max < UNLIMITED_ADD_TO_CART_MAX) {
+    return max;
+  }
+  // Defensive fallback only — add_to_cart is a standard Store API field and
+  // has been present on every product checked, but if it's ever missing,
+  // low_stock_remaining is the next-best real (not invented) signal.
+  return raw.low_stock_remaining ?? undefined;
 }
 
 const CONTACT_FOR_PRICE = "Contact for price";
@@ -336,7 +384,7 @@ export function mapWooProductToProduct(raw: WooCommerceProduct): Product {
     description: raw.description ? toPlainText(raw.description) : undefined,
     descriptionHtml: raw.description ? sanitizeDescriptionHtml(raw.description) : undefined,
     stockStatus: mapStockStatus(raw),
-    stockQuantity: raw.low_stock_remaining ?? undefined,
+    stockQuantity: resolveStockQuantity(raw),
     stockMessage: raw.stock_availability?.text ? decodeEntities(raw.stock_availability.text) : undefined,
     reviews: reviewCount > 0 ? { count: reviewCount, averageRating: Number.parseFloat(raw.average_rating) || 0 } : undefined,
   };

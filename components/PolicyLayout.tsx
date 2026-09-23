@@ -17,10 +17,13 @@ export default function PolicyLayout({
   title,
   effectiveDate,
   sections,
+  contactAddress,
 }: {
   title: string;
   effectiveDate: string;
   sections: PolicySection[];
+  /** Overrides the Contact block's address for this page only — the other four policy pages keep policyContact.address unchanged. */
+  contactAddress?: string;
 }) {
   return (
     <>
@@ -44,7 +47,7 @@ export default function PolicyLayout({
             <h2 className="font-display text-2xl text-ink">Contact</h2>
             <div className="mt-3 space-y-1 text-ink/70">
               <p>{policyContact.businessName}</p>
-              <p>{policyContact.address}</p>
+              <p>{contactAddress ?? policyContact.address}</p>
               <p>
                 Email:{" "}
                 <a href={policyContact.emailHref} className="text-gold-dark hover:underline">

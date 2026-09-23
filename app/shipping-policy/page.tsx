@@ -8,6 +8,11 @@ export const metadata: Metadata = {
 
 const EFFECTIVE_DATE = "September 2026";
 
+// The confirmed pickup/contact address for this page only — the Contact
+// block on the other four policy pages keeps policyContact.address
+// unchanged (see PolicyLayout's contactAddress prop).
+const PICKUP_ADDRESS = "Unit 102, 19623 56 Avenue, Langley, BC V3A 3X7, Canada";
+
 // Content sourced from docs/Nags-Beauty-Website-Policies.pdf ("Shipping
 // Policy" section), updated with the client's confirmed shipping details
 // (Canada-only scope, 3–5 business day processing, and local pickup hours
@@ -121,5 +126,12 @@ const sections: PolicySection[] = [
 ];
 
 export default function ShippingPolicyPage() {
-  return <PolicyLayout title="Shipping Policy" effectiveDate={EFFECTIVE_DATE} sections={sections} />;
+  return (
+    <PolicyLayout
+      title="Shipping Policy"
+      effectiveDate={EFFECTIVE_DATE}
+      sections={sections}
+      contactAddress={PICKUP_ADDRESS}
+    />
+  );
 }
