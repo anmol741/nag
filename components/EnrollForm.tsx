@@ -24,9 +24,12 @@ type SubmitStatus = "idle" | "loading" | "success" | "error";
 export default function EnrollForm({
   courses,
   initialCourseSlug,
+  onlinePaymentEnabled = false,
 }: {
   courses: Course[];
   initialCourseSlug: string;
+  /** When true (COURSE_ONLINE_PAYMENTS_ENABLED), the success message offers the optional e-Transfer payment page. */
+  onlinePaymentEnabled?: boolean;
 }) {
   const router = useRouter();
   const [values, setValues] = useState<FormValues>({
@@ -144,6 +147,14 @@ export default function EnrollForm({
           <span className="font-semibold">{selectedCourse?.title}</span> ({selectedCourse?.price}) and
           will follow up at {values.email} or {values.phone} to confirm enrollment details.
         </p>
+        {onlinePaymentEnabled && selectedCourse && (
+          <Link
+            href={`/enroll/pay?course=${encodeURIComponent(selectedCourse.slug)}`}
+            className="mt-6 inline-block rounded-md bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-light"
+          >
+            Reserve your seat — pay by e-Transfer
+          </Link>
+        )}
       </div>
     );
   }

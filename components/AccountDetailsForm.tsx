@@ -9,7 +9,7 @@ interface Initial {
   email: string;
   phone: string;
   salonName: string;
-  certification: string;
+  certificationOnFile: boolean;
 }
 
 type Status = "idle" | "saving" | "saved" | "error" | "unavailable";
@@ -20,7 +20,6 @@ export default function AccountDetailsForm({ initial }: { initial: Initial }) {
   const [lastName, setLastName] = useState(initial.lastName);
   const [phone, setPhone] = useState(initial.phone);
   const [salonName, setSalonName] = useState(initial.salonName);
-  const [certification, setCertification] = useState(initial.certification);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -33,7 +32,7 @@ export default function AccountDetailsForm({ initial }: { initial: Initial }) {
       const res = await fetch("/api/account/details", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, phone, salonName, certification }),
+        body: JSON.stringify({ firstName, lastName, phone, salonName }),
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; unavailable?: boolean; fieldErrors?: Record<string, string> };
 
@@ -77,7 +76,15 @@ export default function AccountDetailsForm({ initial }: { initial: Initial }) {
       </div>
       <Field id="details-phone" label="Phone Number" value={phone} onChange={setPhone} error={fieldErrors.phone} />
       <Field id="details-salon" label="Salon/Spa Name" value={salonName} onChange={setSalonName} error={fieldErrors.salonName} />
-      <Field id="details-certification" label="Certification" value={certification} onChange={setCertification} error={fieldErrors.certification} />
+      <div>
+        <p className="block text-sm font-medium text-ink">Certification</p>
+        <p className="mt-1 rounded-md border border-ink/15 bg-cream px-3 py-2 text-sm text-ink/70">
+          {initial.certificationOnFile ? "Certification document on file" : "No certification document on file"}
+        </p>
+        <p className="mt-1 text-xs text-ink/50">
+          Certification documents are reviewed by our team. To submit an updated document, please contact us.
+        </p>
+      </div>
 
       <div aria-live="polite">
         {status === "saved" && (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { courses, getCourseBySlug } from "@/lib/courses";
 import EnrollForm from "@/components/EnrollForm";
+import { coursePaymentsEnabled } from "@/lib/server/course-payments";
 
 export const metadata: Metadata = {
   title: "Enroll Now",
@@ -28,7 +29,7 @@ export default async function EnrollPage({
           </p>
         </div>
         <div className="mt-10">
-          <EnrollForm courses={courses} initialCourseSlug={initialCourseSlug} />
+          <EnrollForm courses={courses} initialCourseSlug={initialCourseSlug} onlinePaymentEnabled={coursePaymentsEnabled()} />
         </div>
       </div>
     </section>

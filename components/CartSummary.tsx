@@ -21,32 +21,7 @@ export default function CartSummary({
     <div className="rounded-xl border border-ink/10 bg-cream p-6">
       <h2 className="font-display text-lg text-ink">Order Summary</h2>
 
-      {couponSlot && (
-        <form
-          onSubmit={(e) => e.preventDefault()}
-          className="mt-4 flex gap-2"
-          aria-label="Apply coupon code"
-        >
-          <label htmlFor="coupon-code" className="sr-only">
-            Coupon code
-          </label>
-          <input
-            id="coupon-code"
-            type="text"
-            placeholder="Coupon code"
-            disabled
-            title="Coupons will be available once checkout is connected to WooCommerce"
-            className="w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm outline-none disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled
-            className="shrink-0 rounded-md border border-ink/15 px-4 py-2 text-sm font-medium text-ink/50 disabled:opacity-50"
-          >
-            Apply
-          </button>
-        </form>
-      )}
+      {couponSlot && <p className="mt-3 text-xs text-ink/60">Have a coupon? You can apply it at checkout.</p>}
 
       <dl className="mt-5 space-y-2 text-sm">
         <div className="flex justify-between">
@@ -58,19 +33,20 @@ export default function CartSummary({
           <dd className="text-ink/50">Calculated at checkout</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-ink/60">GST (5%)</dt>
+          <dt className="text-ink/60">GST (5%, estimated)</dt>
           <dd className="text-ink">{currency.format(gst)}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-ink/60">PST (7%)</dt>
+          <dt className="text-ink/60">PST (7%, estimated)</dt>
           <dd className="text-ink">{currency.format(pst)}</dd>
         </div>
       </dl>
 
       <div className="mt-4 flex justify-between border-t border-ink/10 pt-4">
-        <p className="font-display text-base text-ink">Total</p>
+        <p className="font-display text-base text-ink">Estimated Total</p>
         <p className="font-display text-base text-ink">{currency.format(total)}</p>
       </div>
+      <p className="mt-2 text-xs text-ink/50">Final prices, taxes and shipping are confirmed at checkout.</p>
 
       {showCheckoutButton && (
         <Link

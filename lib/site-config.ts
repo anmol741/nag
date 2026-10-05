@@ -42,6 +42,22 @@ export const policyContact = {
   website: "www.nagsbeautysupply.com",
 } as const;
 
+/**
+ * Client-confirmed ordering rules, shown at checkout and on order pages.
+ * The WordPress bridge plugin enforces the same rules server-side (e.g.
+ * the three-day e-Transfer cancellation) — these values are display copy,
+ * not the enforcement.
+ */
+export const commerce = {
+  eTransferEmail: "info@nagsbeautysupply.com",
+  /** Unpaid e-Transfer orders are cancelled automatically after this many days. */
+  unpaidETransferCancelDays: 3,
+  pickupHours: "Monday–Friday, 10:00 AM–4:30 PM",
+  pickupLocation: business.address.full,
+  processingTime: "3–5 business days",
+  shippingRegion: "Canada only",
+} as const;
+
 export const courseCategories = [
   { slug: "skin-facial", label: "Skin & Facial" },
   { slug: "waxing-hair-removal", label: "Waxing & Hair Removal" },

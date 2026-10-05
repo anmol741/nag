@@ -1,29 +1,43 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/server/session";
+import { getVerifiedSession } from "@/lib/server/session";
 import { getCustomerProfile } from "@/lib/server/woocommerce-admin";
-import CheckoutPageClient from "./CheckoutPageClient";
+import CheckoutPageClient, { type CheckoutProfile } from "./CheckoutPageClient";
 
-export const metadata: Metadata = { title: "Checkout" };
-// Reflects the visitor's own session (for prefill) — see
-// app/account/page.tsx's comment for why this must be forced rather than
-// left to automatic dynamic-API detection.
+export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
+// Reflects the visitor's own session — never prerendered.
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
   // Cart contents only exist client-side (localStorage — see lib/cart.ts),
-  // so whether to redirect a logged-out visitor can't be decided here or
-  // in proxy.ts: an empty cart must still show the empty-cart state even
-  // when logged out. CheckoutPageClient makes that call once it knows the
-  // cart. What CAN be resolved server-side is passed down as plain props
-  // so there's no client-side session fetch/flash: whether the visitor is
-  // logged in, and — if so — their profile, for prefilling the form.
-  const session = await getSession();
+  // so whether to redirect a logged-out visitor is decided in
+  // CheckoutPageClient once the cart is known (an empty cart shows the
+  // empty state either way). What's resolved here: whether the session is
+  // valid in WordPress, the account's checkout eligibility, and the saved
+  // profile for prefilling.
+  const sessionResult = await getVerifiedSession();
+  const session = sessionResult.state === "valid" ? sessionResult.session : null;
   const profileResult = session ? await getCustomerProfile(session.sub) : null;
+
+  let profile: CheckoutProfile | null = null;
+  if (session && profileResult?.ok) {
+    const p = profileResult.data;
+    profile = {
+      email: p.email,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      salonName: p.salonName,
+      billing: p.billing,
+      shipping: p.shipping,
+    };
+  }
 
   return (
     <CheckoutPageClient
       loggedIn={Boolean(session)}
-      profile={profileResult?.ok ? profileResult.data : null}
+      serviceUnavailable={sessionResult.state === "unavailable"}
+      accountStatus={session?.status ?? null}
+      profile={profile}
+      sessionEmail={session?.email ?? ""}
     />
   );
 }

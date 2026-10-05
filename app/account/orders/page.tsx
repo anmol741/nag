@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getSession } from "@/lib/server/session";
-import { getCustomerOrders } from "@/lib/server/woocommerce-admin";
+import { requireAccountPageSession } from "@/lib/server/page-session";
+import { getCustomerOrders, orderStatusLabel } from "@/lib/server/woocommerce-admin";
 import { business } from "@/lib/site-config";
 import AccountNavigation from "@/components/AccountNavigation";
+import AccountUnavailable from "@/components/AccountUnavailable";
 
 export const metadata: Metadata = { title: "Orders" };
 // See app/account/page.tsx's comment — same reasoning applies here.
@@ -13,10 +14,10 @@ const currency = new Intl.NumberFormat("en-CA", { style: "currency", currency: "
 const dateFormat = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "long", day: "numeric" });
 
 export default async function AccountOrdersPage() {
-  // proxy.ts already redirects a logged-out visitor before this ever
-  // renders — this is a second, defense-in-depth check, not the only one.
-  const session = await getSession();
-  if (!session) return null;
+  // proxy.ts does a cheap cookie check first; this verifies the session
+  // with WordPress (logged out / password reset = rejected).
+  const session = await requireAccountPageSession("/account/orders");
+  if (session === "unavailable") return <AccountUnavailable title="Orders" />;
 
   const result = await getCustomerOrders(session.sub);
 
@@ -38,7 +39,7 @@ export default async function AccountOrdersPage() {
                       <span>
                         <span className="block font-medium text-ink">Order #{order.number}</span>
                         <span className="block text-sm text-ink/60">
-                          {dateFormat.format(new Date(order.date))} &middot; {order.status}
+                          {dateFormat.format(new Date(order.date))} &middot; {orderStatusLabel(order.status)}
                         </span>
                       </span>
                       <span className="font-semibold text-ink">{currency.format(Number.parseFloat(order.total) || 0)}</span>

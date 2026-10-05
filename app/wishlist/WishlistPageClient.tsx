@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Product } from "@/lib/product";
 import { readArray, useStoredIds, writeArray } from "@/lib/local-store";
-import { WISHLIST_STORAGE_KEY } from "@/components/WishlistButton";
+import { WISHLIST_STORAGE_KEY } from "@/lib/wishlist";
 import ProductGrid from "@/components/ProductGrid";
 import ProductGridSkeleton from "@/components/ProductGridSkeleton";
 import EmptyState from "@/components/EmptyState";

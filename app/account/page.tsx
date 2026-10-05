@@ -1,30 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getSession } from "@/lib/server/session";
+import { getVerifiedSession } from "@/lib/server/session";
 import { getCustomerProfile } from "@/lib/server/woocommerce-admin";
 import { isSafeReturnPath } from "@/lib/validation";
 import { business } from "@/lib/site-config";
 import LoginForm from "@/components/LoginForm";
 import AccountNavigation from "@/components/AccountNavigation";
+import AccountStatusNotice from "@/components/AccountStatusNotice";
 
 export const metadata: Metadata = { title: "My Account" };
 // Must render per-request, never prerendered — it reflects the visitor's
-// own session. Forced explicitly rather than relying on Next.js's
-// automatic dynamic-API detection: getSession() intentionally short-
-// circuits before calling cookies() when SESSION_SECRET is unset (see its
-// own comment on why), which would otherwise make this look "static" to
-// that detection and get build-time-frozen into the logged-out view for
-// everyone, including a visitor who really is logged in.
+// own session.
 export const dynamic = "force-dynamic";
 
-export default async function AccountPage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
-  const session = await getSession();
-  const { returnTo } = await searchParams;
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ returnTo?: string; reset?: string; verified?: string }> }) {
+  const sessionResult = await getVerifiedSession();
+  const { returnTo, reset, verified } = await searchParams;
   // Validated once, here, server-side — LoginForm and the "create account"
-  // link below both trust this value as-is rather than re-validating it.
+  // link below both trust this value as-is.
   const safeReturnTo = isSafeReturnPath(returnTo) ? returnTo : undefined;
 
-  if (!session) {
+  if (sessionResult.state === "unavailable") {
+    return (
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-md px-6 text-center">
+          <h1 className="font-display text-3xl text-ink">My Account</h1>
+          <p className="mt-6 text-ink/60">
+            Your account can&rsquo;t be reached right now. Please try again in a few minutes, or call{" "}
+            <a href={business.phoneHref} className="text-gold-dark hover:underline">
+              {business.phone}
+            </a>
+            .
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (sessionResult.state === "none") {
     return (
       <section className="bg-white py-16">
         <div className="mx-auto max-w-md px-6">
@@ -32,7 +45,17 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
           {safeReturnTo && (
             <p role="status" className="mt-4 rounded-md border border-gold/30 bg-gold/10 px-4 py-3 text-center text-sm text-ink/80">
-              Please log in or create an account before continuing to checkout.
+              Please log in to continue.
+            </p>
+          )}
+          {reset === "1" && (
+            <p role="status" className="mt-4 rounded-md border border-gold/30 bg-gold/10 px-4 py-3 text-center text-sm text-ink/80">
+              Your password has been changed. Please log in with your new password.
+            </p>
+          )}
+          {verified === "1" && (
+            <p role="status" className="mt-4 rounded-md border border-gold/30 bg-gold/10 px-4 py-3 text-center text-sm text-ink/80">
+              Thank you — your email is verified. Log in to see your account status.
             </p>
           )}
 
@@ -54,48 +77,54 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     );
   }
 
+  const session = sessionResult.session;
   const profileResult = await getCustomerProfile(session.sub);
 
   return (
     <section className="bg-white py-16">
       <div className="mx-auto max-w-5xl px-6">
         <h1 className="font-display text-3xl text-ink">My Account</h1>
-        <p className="mt-2 text-ink/60">
-          Welcome back{profileResult.ok ? `, ${profileResult.data.firstName}` : ""}.
-        </p>
+        <p className="mt-2 text-ink/60">Welcome back{profileResult.ok ? `, ${profileResult.data.firstName}` : ""}.</p>
         <div className="mt-10 grid gap-8 md:grid-cols-[220px_1fr]">
           <AccountNavigation />
-          <div className="rounded-xl border border-ink/10 bg-cream p-8">
-            {profileResult.ok ? (
-              <dl className="space-y-3 text-sm text-ink/70">
-                <div>
-                  <dt className="font-semibold text-ink">Name</dt>
-                  <dd>
-                    {profileResult.data.firstName} {profileResult.data.lastName}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-ink">Email</dt>
-                  <dd>{profileResult.data.email}</dd>
-                </div>
-                {profileResult.data.salonName && (
+          <div className="space-y-6">
+            <AccountStatusNotice status={session.status} />
+            <div className="rounded-xl border border-ink/10 bg-cream p-8">
+              {profileResult.ok ? (
+                <dl className="space-y-3 text-sm text-ink/70">
                   <div>
-                    <dt className="font-semibold text-ink">Salon/Spa</dt>
-                    <dd>{profileResult.data.salonName}</dd>
+                    <dt className="font-semibold text-ink">Name</dt>
+                    <dd>
+                      {profileResult.data.firstName} {profileResult.data.lastName}
+                    </dd>
                   </div>
-                )}
-              </dl>
-            ) : profileResult.reason === "service_unavailable" ? (
-              <p className="text-center text-ink/60">
-                Full account details aren&rsquo;t connected yet. Please call{" "}
-                <a href={business.phoneHref} className="text-gold-dark hover:underline">
-                  {business.phone}
-                </a>{" "}
-                for help with your account.
-              </p>
-            ) : (
-              <p className="text-center text-ink/60">We couldn&rsquo;t load your account details right now. Please try again shortly.</p>
-            )}
+                  <div>
+                    <dt className="font-semibold text-ink">Email</dt>
+                    <dd>{profileResult.data.email}</dd>
+                  </div>
+                  {profileResult.data.salonName && (
+                    <div>
+                      <dt className="font-semibold text-ink">Salon/Spa</dt>
+                      <dd>{profileResult.data.salonName}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt className="font-semibold text-ink">Wholesale access</dt>
+                    <dd>{session.status.wholesale ? "Enabled" : "Not enabled"}</dd>
+                  </div>
+                </dl>
+              ) : profileResult.reason === "service_unavailable" ? (
+                <p className="text-center text-ink/60">
+                  Full account details aren&rsquo;t available right now. Please call{" "}
+                  <a href={business.phoneHref} className="text-gold-dark hover:underline">
+                    {business.phone}
+                  </a>{" "}
+                  for help with your account.
+                </p>
+              ) : (
+                <p className="text-center text-ink/60">We couldn&rsquo;t load your account details right now. Please try again shortly.</p>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -2,50 +2,56 @@ import { NextResponse } from "next/server";
 import { registerCustomer } from "@/lib/server/wp-auth";
 import { verifySameOrigin } from "@/lib/server/csrf";
 import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { forbiddenOriginResponse, tooManyRequestsResponse } from "@/lib/server/require-session";
 import { isValidCanadianPhone, isValidEmail, isValidPassword, normalizeEmail, normalizePhone } from "@/lib/validation";
+import { MAX_CERTIFICATION_BYTES, safeDisplayFileName, validateCertificationFile } from "@/lib/security/upload";
+import { business } from "@/lib/site-config";
 
-const UNAVAILABLE_MESSAGE =
-  "Online account registration isn't connected yet. Please call (778) 278-7727 or visit our Langley storefront, and we'll get you set up.";
+const UNAVAILABLE_MESSAGE = `Online registration is temporarily unavailable. Please try again shortly, or call ${business.phone}.`;
+// File limit + generous room for the text fields and multipart framing.
+const MAX_REQUEST_BYTES = MAX_CERTIFICATION_BYTES + 256 * 1024;
 
-interface RegisterBody {
-  firstName?: unknown;
-  lastName?: unknown;
-  email?: unknown;
-  phone?: unknown;
-  salonName?: unknown;
-  certification?: unknown;
-  password?: unknown;
-  confirmPassword?: unknown;
-  agreedToTerms?: unknown;
+function text(form: FormData, key: string, max = 120): string {
+  const value = form.get(key);
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
 export async function POST(request: Request) {
-  if (!verifySameOrigin(request)) {
-    return NextResponse.json({ error: "Request rejected." }, { status: 403 });
-  }
+  if (!verifySameOrigin(request)) return forbiddenOriginResponse();
 
   const ip = getClientIp(request);
-  const rateLimit = checkRateLimit(`register:${ip}`, 5, 15 * 60);
-  if (!rateLimit.allowed) {
-    return NextResponse.json({ error: "Too many attempts. Please wait a few minutes and try again." }, { status: 429 });
+  const rateLimit = checkRateLimit(`register:ip:${ip}`, 5, 60 * 60);
+  if (!rateLimit.allowed) return tooManyRequestsResponse(rateLimit.retryAfterSeconds);
+
+  const declaredLength = Number.parseInt(request.headers.get("content-length") ?? "", 10);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BYTES) {
+    return NextResponse.json(
+      { error: "The certification file is too large. Please upload a file under 4 MB.", fieldErrors: { certification: "File must be under 4 MB." } },
+      { status: 413 }
+    );
+  }
+  if (!(request.headers.get("content-type") ?? "").toLowerCase().startsWith("multipart/form-data")) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 415 });
   }
 
-  let body: RegisterBody;
+  let form: FormData;
   try {
-    body = (await request.json()) as RegisterBody;
+    form = await request.formData();
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const firstName = typeof body.firstName === "string" ? body.firstName.trim() : "";
-  const lastName = typeof body.lastName === "string" ? body.lastName.trim() : "";
-  const email = typeof body.email === "string" ? body.email.trim() : "";
-  const phone = typeof body.phone === "string" ? body.phone.trim() : "";
-  const salonName = typeof body.salonName === "string" ? body.salonName.trim() : "";
-  const certification = typeof body.certification === "string" ? body.certification.trim() : "";
-  const password = typeof body.password === "string" ? body.password : "";
-  const confirmPassword = typeof body.confirmPassword === "string" ? body.confirmPassword : "";
-  const agreedToTerms = body.agreedToTerms === true;
+  const firstName = text(form, "firstName");
+  const lastName = text(form, "lastName");
+  const email = text(form, "email", 254);
+  const phone = text(form, "phone", 30);
+  const salonName = text(form, "salonName", 150);
+  const passwordRaw = form.get("password");
+  const confirmRaw = form.get("confirmPassword");
+  const password = typeof passwordRaw === "string" ? passwordRaw : "";
+  const confirmPassword = typeof confirmRaw === "string" ? confirmRaw : "";
+  const agreedToTerms = form.get("agreedToTerms") === "true";
+  const file = form.get("certification");
 
   const fieldErrors: Record<string, string> = {};
   if (!firstName) fieldErrors.firstName = "First name is required.";
@@ -53,48 +59,71 @@ export async function POST(request: Request) {
   if (!email || !isValidEmail(email)) fieldErrors.email = "Enter a valid email address.";
   if (!phone || !isValidCanadianPhone(phone)) fieldErrors.phone = "Enter a valid Canadian phone number.";
   if (!salonName) fieldErrors.salonName = "Salon/spa name is required.";
-  if (!certification) fieldErrors.certification = "Certification is required.";
-  if (!isValidPassword(password)) fieldErrors.password = "Password must be at least 8 characters and include a letter and a number.";
+  if (!isValidPassword(password) || password.length > 200) {
+    fieldErrors.password = "Password must be 8–200 characters and include a letter and a number.";
+  }
   if (password !== confirmPassword) fieldErrors.confirmPassword = "Passwords do not match.";
   if (!agreedToTerms) fieldErrors.agreedToTerms = "You must agree to the Privacy Policy and Terms and Conditions.";
 
-  if (Object.keys(fieldErrors).length > 0) {
+  let certification: { fileName: string; mimeType: string; extension: string; base64: string } | null = null;
+  if (!(file instanceof File) || file.size === 0) {
+    fieldErrors.certification = "Please upload your certification document or photo.";
+  } else if (file.size > MAX_CERTIFICATION_BYTES) {
+    fieldErrors.certification = "The file is too large. Please upload a file under 4 MB.";
+  } else {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const check = validateCertificationFile({ name: file.name, type: file.type, size: file.size, bytes });
+    if (!check.ok) {
+      fieldErrors.certification = check.error;
+    } else {
+      certification = {
+        fileName: safeDisplayFileName(file.name),
+        mimeType: check.mimeType,
+        extension: check.extension,
+        base64: Buffer.from(bytes).toString("base64"),
+      };
+    }
+  }
+
+  if (Object.keys(fieldErrors).length > 0 || !certification) {
     return NextResponse.json({ error: "Please correct the highlighted fields.", fieldErrors }, { status: 400 });
   }
 
   const normalizedEmail = normalizeEmail(email);
-  const normalizedPhone = normalizePhone(phone);
-
-  const outcome = await registerCustomer({
-    firstName,
-    lastName,
-    email: normalizedEmail,
-    phone: normalizedPhone,
-    salonName,
-    certification,
-    password,
-  });
+  const outcome = await registerCustomer(
+    {
+      firstName,
+      lastName,
+      email: normalizedEmail,
+      phone: normalizePhone(phone),
+      salonName,
+      password,
+      agreedToTermsAt: new Date().toISOString(),
+      certification,
+    },
+    ip
+  );
 
   if (outcome.ok) {
-    // Registration succeeding does not log the customer in automatically —
-    // account creation inside checkout, and what happens immediately after
-    // registration, are both explicitly unconfirmed (see the Phase 2
-    // report). The customer is sent to log in with their new credentials.
+    // Not logged in automatically: the account must verify its email and be
+    // approved by Nag's Beauty before wholesale access is enabled.
     return NextResponse.json({ ok: true });
   }
 
-  if (outcome.reason === "duplicate_email") {
-    // Deliberately still generic enough not to become an email-enumeration
-    // oracle for LOGIN, but registration inherently has to tell the
-    // customer their own email is already registered (WooCommerce itself
-    // would reject it the same way) — this is expected, standard behavior,
-    // distinct from the login endpoint's stricter non-disclosure rule.
-    return NextResponse.json(
-      { error: "An account with this email already exists. Try logging in instead.", fieldErrors: { email: "Email already registered." } },
-      { status: 409 }
-    );
+  switch (outcome.reason) {
+    case "duplicate_email":
+      // Registration inherently has to say the email is taken (WooCommerce
+      // enforces unique emails). Login and password reset stay non-disclosing.
+      return NextResponse.json(
+        { error: "An account with this email already exists. Try logging in, or reset your password.", fieldErrors: { email: "Email already registered." } },
+        { status: 409 }
+      );
+    case "invalid":
+      return NextResponse.json({ error: outcome.message, fieldErrors: outcome.fieldErrors ?? {} }, { status: 400 });
+    case "rate_limited":
+      return tooManyRequestsResponse();
+    default:
+      console.warn("[auth/register] bridge unavailable");
+      return NextResponse.json({ error: UNAVAILABLE_MESSAGE, unavailable: true }, { status: 503 });
   }
-
-  console.warn(`[auth/register] attempted while unavailable — email=${normalizedEmail}`);
-  return NextResponse.json({ error: UNAVAILABLE_MESSAGE, unavailable: true }, { status: 503 });
 }

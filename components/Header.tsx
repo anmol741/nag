@@ -7,7 +7,7 @@ import { business, courseCategories } from "@/lib/site-config";
 import { useCart } from "@/lib/cart";
 import { closeMiniCart, openMiniCart, useMiniCartOpen } from "@/lib/mini-cart";
 import { useStoredIds } from "@/lib/local-store";
-import { WISHLIST_STORAGE_KEY } from "./WishlistButton";
+import { WISHLIST_STORAGE_KEY, clearWishlistMirror, useWishlistSync } from "@/lib/wishlist";
 import MiniCart from "./MiniCart";
 import SocialLinks from "./SocialLinks";
 import { BagIcon, ChevronDownIcon, CloseIcon, HeartIcon, MenuIcon, PhoneIcon, UserIcon } from "./icons";
@@ -57,6 +57,7 @@ export default function Header() {
   const { lines: cartLines } = useCart();
   const cartCount = cartLines.reduce((sum, l) => sum + l.quantity, 0);
   const wishlistCount = useStoredIds(WISHLIST_STORAGE_KEY).length;
+  useWishlistSync(loggedIn);
 
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
@@ -84,6 +85,7 @@ export default function Header() {
     } catch {
       // Best-effort — the cookie is HttpOnly and short-lived regardless.
     }
+    clearWishlistMirror();
     setLoggedIn(false);
     router.push("/account");
     router.refresh();

@@ -47,7 +47,8 @@ export interface CustomerProfile {
   billing: Address;
   shipping: Address;
   salonName?: string;
-  certification?: string;
+  /** Whether a certification document is on file — the file itself is never exposed here (admin-only download in WordPress). */
+  certificationOnFile: boolean;
 }
 
 export interface OrderSummary {
@@ -62,12 +63,26 @@ export interface OrderLineItem {
   name: string;
   quantity: number;
   total: string;
+  /** Selected variation attributes, e.g. "Size: 50ml". */
+  options: string[];
 }
 
 export interface OrderDetail extends OrderSummary {
   items: OrderLineItem[];
   billing: Address;
   shipping: Address;
+  paymentMethod: string;
+  paymentMethodTitle: string;
+  shippingMethods: { methodId: string; title: string; total: string }[];
+  isLocalPickup: boolean;
+  pickupReady: boolean;
+  subtotal: string;
+  discountTotal: string;
+  shippingTotal: string;
+  totalTax: string;
+  customerNote: string;
+  coupons: string[];
+  course?: { title: string; paymentType: "full" | "deposit"; coursePrice: string; amountDue: string; remainingBalance: string };
 }
 
 function adminApiConfigured(): boolean {
@@ -136,7 +151,7 @@ interface WcAddress {
 }
 interface WcMeta {
   key: string;
-  value: string;
+  value: unknown;
 }
 interface WcCustomer {
   id: number;
@@ -151,6 +166,12 @@ interface WcLineItem {
   name: string;
   quantity: number;
   total: string;
+  meta_data?: { key: string; value: unknown; display_key?: string; display_value?: unknown }[];
+}
+interface WcShippingLine {
+  method_id: string;
+  method_title: string;
+  total: string;
 }
 interface WcOrder {
   id: number;
@@ -162,6 +183,15 @@ interface WcOrder {
   line_items: WcLineItem[];
   billing: WcAddress;
   shipping: WcAddress;
+  payment_method?: string;
+  payment_method_title?: string;
+  shipping_lines?: WcShippingLine[];
+  coupon_lines?: { code: string }[];
+  discount_total?: string;
+  shipping_total?: string;
+  total_tax?: string;
+  customer_note?: string;
+  meta_data?: WcMeta[];
 }
 
 function mapAddress(raw: WcAddress): Address {
@@ -179,8 +209,29 @@ function mapAddress(raw: WcAddress): Address {
   };
 }
 
-function metaValue(meta: WcMeta[], key: string): string | undefined {
-  return meta.find((m) => m.key === key)?.value || undefined;
+function metaValue(meta: WcMeta[] | undefined, key: string): string | undefined {
+  const value = (meta ?? []).find((m) => m.key === key)?.value;
+  if (typeof value === "string" && value) return value;
+  if (typeof value === "number") return String(value);
+  return undefined;
+}
+
+/** WooCommerce local-pickup method IDs (classic and block checkout) plus the bridge plugin's own Langley pickup rate. */
+export const LOCAL_PICKUP_METHOD_IDS = new Set(["local_pickup", "pickup_location", "nag_local_pickup"]);
+
+/** Customer-facing order status labels, including the bridge plugin's custom "ready for pickup" status. */
+export function orderStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    pending: "Pending payment",
+    "on-hold": "Awaiting payment",
+    processing: "Processing",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    refunded: "Refunded",
+    failed: "Failed",
+    "nag-ready-pickup": "Ready for pickup",
+  };
+  return labels[status] ?? status.replace(/[-_]/g, " ");
 }
 
 /** Fetches a customer's own profile by their verified session customer ID — never by a client-supplied ID. */
@@ -198,7 +249,7 @@ export async function getCustomerProfile(customerId: string): Promise<AdminApiRe
       billing: mapAddress(c.billing),
       shipping: mapAddress(c.shipping),
       salonName: metaValue(c.meta_data, CUSTOMER_META_KEYS.salonName),
-      certification: metaValue(c.meta_data, CUSTOMER_META_KEYS.certification),
+      certificationOnFile: Boolean(metaValue(c.meta_data, CUSTOMER_META_KEYS.certification)),
     },
   };
 }
@@ -227,6 +278,12 @@ export async function getCustomerOrder(customerId: string, orderId: string): Pro
   if (String(result.data.customer_id) !== customerId) return { ok: false, reason: "not_found" };
 
   const o = result.data;
+  const shippingLines = (o.shipping_lines ?? []).map((line) => ({ methodId: line.method_id, title: line.method_title, total: line.total }));
+  // Line totals are post-discount; adding the discount back gives the pre-discount subtotal.
+  const subtotal = o.line_items.reduce((sum, li) => sum + (Number.parseFloat(li.total) || 0), 0) + (Number.parseFloat(o.discount_total ?? "0") || 0);
+  const courseTitle = metaValue(o.meta_data, "_nag_course_title");
+  const paymentType = metaValue(o.meta_data, "_nag_payment_type");
+
   return {
     ok: true,
     data: {
@@ -235,9 +292,37 @@ export async function getCustomerOrder(customerId: string, orderId: string): Pro
       date: o.date_created,
       status: o.status,
       total: o.total,
-      items: o.line_items.map((li) => ({ name: li.name, quantity: li.quantity, total: li.total })),
+      items: o.line_items.map((li) => ({
+        name: li.name,
+        quantity: li.quantity,
+        total: li.total,
+        options: (li.meta_data ?? [])
+          .filter((m) => typeof m.key === "string" && !m.key.startsWith("_") && typeof m.display_value === "string")
+          .map((m) => `${m.display_key ?? m.key}: ${String(m.display_value)}`),
+      })),
       billing: mapAddress(o.billing),
       shipping: mapAddress(o.shipping),
+      paymentMethod: o.payment_method ?? "",
+      paymentMethodTitle: o.payment_method_title ?? "",
+      shippingMethods: shippingLines,
+      isLocalPickup: shippingLines.some((line) => LOCAL_PICKUP_METHOD_IDS.has(line.methodId)),
+      pickupReady: o.status === "nag-ready-pickup" || Boolean(metaValue(o.meta_data, "_nag_pickup_ready_emailed_at")),
+      subtotal: subtotal.toFixed(2),
+      discountTotal: o.discount_total ?? "0",
+      shippingTotal: o.shipping_total ?? "0",
+      totalTax: o.total_tax ?? "0",
+      customerNote: o.customer_note ?? "",
+      coupons: (o.coupon_lines ?? []).map((c) => c.code),
+      course:
+        courseTitle && (paymentType === "full" || paymentType === "deposit")
+          ? {
+              title: courseTitle,
+              paymentType,
+              coursePrice: metaValue(o.meta_data, "_nag_course_price") ?? "",
+              amountDue: metaValue(o.meta_data, "_nag_amount_due_now") ?? o.total,
+              remainingBalance: metaValue(o.meta_data, "_nag_remaining_balance") ?? "0",
+            }
+          : undefined,
     },
   };
 }
@@ -262,10 +347,9 @@ export interface DetailsUpdate {
   lastName: string;
   phone: string;
   salonName: string;
-  certification: string;
 }
 
-/** Updates the customer's own name, phone, salon name and certification. Email is deliberately not accepted here — see the Phase 2 report on why email stays read-only for now. */
+/** Updates the customer's own name, phone and salon name. Email stays read-only (changing it would bypass email verification). The certification document is set at registration and reviewed by an administrator — it can't be replaced from here. */
 export async function updateCustomerDetails(customerId: string, update: DetailsUpdate): Promise<AdminApiResult<true>> {
   const result = await wcAdminRequest<WcCustomer>(
     `/customers/${encodeURIComponent(customerId)}`,
@@ -276,10 +360,7 @@ export async function updateCustomerDetails(customerId: string, update: DetailsU
         first_name: update.firstName,
         last_name: update.lastName,
         billing: { phone: update.phone },
-        meta_data: [
-          { key: CUSTOMER_META_KEYS.salonName, value: update.salonName },
-          { key: CUSTOMER_META_KEYS.certification, value: update.certification },
-        ],
+        meta_data: [{ key: CUSTOMER_META_KEYS.salonName, value: update.salonName }],
       },
     }
   );

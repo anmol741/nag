@@ -1,18 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { business } from "@/lib/site-config";
+import { markWishlistMergePending } from "@/lib/wishlist";
 
 type Status = "idle" | "loading" | "error" | "unavailable";
-
-// WordPress's own hosted, built-in password-reset flow — this link leaves
-// the Next.js app entirely and never touches our server, which is exactly
-// the "approved WordPress password-reset flow" this phase requires rather
-// than a custom-built reset system. Same store domain lib/woocommerce.ts
-// already talks to server-side; hardcoded here too since this is a client
-// component (no server-only env var can reach it).
-const WORDPRESS_LOST_PASSWORD_URL = "https://nagsbeautysupply.com/wp-login.php?action=lostpassword";
 
 /** `returnTo` is already validated server-side by the page that renders this (see app/account/page.tsx) — this component trusts it as-is rather than re-validating client-side. */
 export default function LoginForm({ returnTo }: { returnTo?: string }) {
@@ -21,9 +15,12 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const submitting = useRef(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setStatus("loading");
     try {
       const res = await fetch("/api/auth/login", {
@@ -34,6 +31,8 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; unavailable?: boolean };
 
       if (res.ok && data.ok) {
+        // Guest wishlist is merged into the account on the next page (see lib/wishlist.ts).
+        markWishlistMergePending();
         router.push(returnTo ?? "/account");
         router.refresh();
         return;
@@ -44,6 +43,8 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
     } catch {
       setStatus("error");
       setMessage("We couldn't reach the server. Please check your connection and try again.");
+    } finally {
+      submitting.current = false;
     }
   }
 
@@ -84,12 +85,12 @@ export default function LoginForm({ returnTo }: { returnTo?: string }) {
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
-          <a
-            href={WORDPRESS_LOST_PASSWORD_URL}
+          <Link
+            href="/account/forgot-password"
             className="text-sm text-gold-dark underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-gold/40"
           >
             Lost your password?
-          </a>
+          </Link>
         </div>
 
         <div aria-live="polite">

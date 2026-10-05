@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { clearWishlistMirror } from "@/lib/wishlist";
 
 const links = [
   { label: "Account Overview", href: "/account" },
@@ -25,6 +26,7 @@ export default function AccountNavigation() {
       // router.refresh() below re-reads the real (now server-verified)
       // session state either way.
     }
+    clearWishlistMirror();
     router.push("/account");
     router.refresh();
   }

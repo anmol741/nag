@@ -1,14 +1,16 @@
 "use client";
 
 import { readArray, useStoredIds, writeArray } from "@/lib/local-store";
+import { MAX_WISHLIST_ITEMS, WISHLIST_STORAGE_KEY } from "@/lib/wishlist";
 import { HeartIcon } from "./icons";
 
-export const WISHLIST_STORAGE_KEY = "nagsbeauty:wishlist";
+// Re-exported for existing imports.
+export { WISHLIST_STORAGE_KEY };
 
 /**
- * Client-side wishlist toggle backed by localStorage. There is no customer
- * account system yet, so this is per-browser only; swap in a real
- * account-linked wishlist once WooCommerce customer auth is connected.
+ * Wishlist toggle backed by localStorage. For guests that's the whole
+ * wishlist; for logged-in customers it's a mirror that useWishlistSync
+ * (lib/wishlist.ts, mounted by Header) keeps in sync with their account.
  */
 export default function WishlistButton({
   productId,
@@ -26,7 +28,7 @@ export default function WishlistButton({
     const current = readArray<string>(WISHLIST_STORAGE_KEY);
     const next = current.includes(productId)
       ? current.filter((id) => id !== productId)
-      : [...new Set([...current, productId])];
+      : [...new Set([...current, productId])].slice(-MAX_WISHLIST_ITEMS);
     writeArray(WISHLIST_STORAGE_KEY, next);
   }
 

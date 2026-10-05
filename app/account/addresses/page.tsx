@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { getSession } from "@/lib/server/session";
+import { requireAccountPageSession } from "@/lib/server/page-session";
 import { getCustomerProfile } from "@/lib/server/woocommerce-admin";
 import { business } from "@/lib/site-config";
 import AccountNavigation from "@/components/AccountNavigation";
 import AddressesForm from "@/components/AddressesForm";
+import AccountUnavailable from "@/components/AccountUnavailable";
 
 export const metadata: Metadata = { title: "Addresses" };
 // See app/account/page.tsx's comment — same reasoning applies here.
 export const dynamic = "force-dynamic";
 
 export default async function AccountAddressesPage() {
-  const session = await getSession();
-  if (!session) return null; // proxy.ts already redirects before this renders
+  const session = await requireAccountPageSession("/account/addresses");
+  if (session === "unavailable") return <AccountUnavailable title="Addresses" />;
 
   const result = await getCustomerProfile(session.sub);
 
